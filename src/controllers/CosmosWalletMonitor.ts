@@ -49,9 +49,6 @@ export class CosmosWalletMonitor {
                 })
                 this.websocket.on('close', (code, reason) => {
                     console.log("Closed")
-                    // if (this.reconnectAttempts === 0) {
-                    //     reject(new Error(`Web socket connection closed, code: ${code}, reason: ${reason}`))
-                    // } else 
                     if (this.isShuttingDown === false) {
                         this.scheduleReconnect()
                     }
