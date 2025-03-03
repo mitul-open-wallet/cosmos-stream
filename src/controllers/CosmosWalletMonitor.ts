@@ -27,8 +27,12 @@ export class CosmosWalletMonitor {
     }
 
     async bootstrap(): Promise<void> {
-        await this.start()
-        await this.setupRabbitMq()
+        try {
+            await this.start()
+        } catch (error) {
+            console.error("websocket error", error)
+        }
+        //await this.setupRabbitMq()
     }
 
     private async start(): Promise<void> {
