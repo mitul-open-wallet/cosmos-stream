@@ -32,7 +32,7 @@ export class CosmosWalletMonitor {
         } catch (error) {
             console.error("websocket error", error)
         }
-        //await this.setupRabbitMq()
+        await this.setupRabbitMq()
     }
 
     private async start(): Promise<void> {
@@ -109,15 +109,16 @@ export class CosmosWalletMonitor {
     private async setupRabbitMq(): Promise<void> {
         try {
             this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl)
+            this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl)
+            this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
+            this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
         } catch (error) {
             console.error("rabbitmq connection error", {
                 errorName: error,
                 errorMessage: error
             })
+            throw error
         }
-        this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl)
-        this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
-        this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
     }
 
     private findValue(attributes: EventAttribute[], key: string): EventAttribute | undefined {
