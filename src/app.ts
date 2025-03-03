@@ -14,3 +14,9 @@ app.get('/check', async (req: Request, response: Response) => {
     await cosmosMonitor.bootstrap()
     response.status(200).send({"message": "hello"})
 });
+
+async function bootstrap() {
+    await cosmosMonitor.bootstrap()
+}
+
+bootstrap();

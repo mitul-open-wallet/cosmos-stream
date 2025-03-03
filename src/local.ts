@@ -1,4 +1,8 @@
 import { CosmosWalletMonitor } from "./controllers/CosmosWalletMonitor";
 
-const cosmosMonitor = new CosmosWalletMonitor("wss://cosmos-rpc.publicnode.com:443/websocket");
-cosmosMonitor.bootstrap()
+async function main() {
+    const cosmosMonitor = new CosmosWalletMonitor("wss://cosmos-rpc.publicnode.com:443/websocket");
+    await cosmosMonitor.bootstrap()
+}
+
+main();
