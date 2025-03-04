@@ -22,6 +22,9 @@ app.listen(port, () => {
     console.log(`server is running on: port ${port}`);
 });
 app.get('/check', (req, response) => __awaiter(void 0, void 0, void 0, function* () {
-    yield cosmosMonitor.bootstrap();
     response.status(200).send({ "message": "hello" });
+}));
+app.get('/bootstrap', (request, response) => __awaiter(void 0, void 0, void 0, function* () {
+    //await cosmosMonitor.bootstrap()
+    response.status(200).send({ "message": "cosmos watcher started successfully" });
 }));

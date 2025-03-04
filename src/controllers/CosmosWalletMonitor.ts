@@ -27,6 +27,7 @@ export class CosmosWalletMonitor {
     }
 
     async bootstrap(): Promise<void> {
+        console.log(`rabbit mq url: ${this.rabbitMqUrl}`)
         try {
             await this.start()
         } catch (error) {

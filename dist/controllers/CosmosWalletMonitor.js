@@ -32,7 +32,12 @@ class CosmosWalletMonitor {
     }
     bootstrap() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.start();
+            try {
+                yield this.start();
+            }
+            catch (error) {
+                console.error("websocket error", error);
+            }
             yield this.setupRabbitMq();
         });
     }
@@ -105,16 +110,17 @@ class CosmosWalletMonitor {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 this.rabbitMqConnection = yield amqplib_1.default.connect(this.rabbitMqUrl);
+                this.rabbitMqConnection = yield amqplib_1.default.connect(this.rabbitMqUrl);
+                this.rabbitMqChannel = yield this.rabbitMqConnection.createChannel();
+                this.rabbitMqChannel.assertExchange(config_1.appConfig.exchangeName, 'direct');
             }
             catch (error) {
                 console.error("rabbitmq connection error", {
                     errorName: error,
                     errorMessage: error
                 });
+                throw error;
             }
-            this.rabbitMqConnection = yield amqplib_1.default.connect(this.rabbitMqUrl);
-            this.rabbitMqChannel = yield this.rabbitMqConnection.createChannel();
-            this.rabbitMqChannel.assertExchange(config_1.appConfig.exchangeName, 'direct');
         });
     }
     findValue(attributes, key) {
