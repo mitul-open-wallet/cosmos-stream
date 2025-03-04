@@ -5,7 +5,6 @@ import { CosmosWalletMonitor } from './controllers/CosmosWalletMonitor';
 const port = appConfig.port;
 const app: Express = express();
 const cosmosMonitor = new CosmosWalletMonitor("wss://cosmos-rpc.publicnode.com:443/websocket");
-console.log(`the server will run on port: ${port} rabbitmq: ${appConfig.rabbitMqUrl}`)
 
 app.listen(port, () => {
     console.log(`server is running on: port ${port}`)
