@@ -32,6 +32,7 @@ class CosmosWalletMonitor {
     }
     bootstrap() {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log(`rabbit mq url: ${this.rabbitMqUrl}`);
             try {
                 yield this.start();
             }

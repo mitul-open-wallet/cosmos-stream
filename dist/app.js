@@ -18,6 +18,7 @@ const CosmosWalletMonitor_1 = require("./controllers/CosmosWalletMonitor");
 const port = config_1.appConfig.port;
 const app = (0, express_1.default)();
 const cosmosMonitor = new CosmosWalletMonitor_1.CosmosWalletMonitor("wss://cosmos-rpc.publicnode.com:443/websocket");
+console.log(`the server will run on port: ${port} rabbitmq: ${config_1.appConfig.rabbitMqUrl}`);
 app.listen(port, () => {
     console.log(`server is running on: port ${port}`);
 });
@@ -25,6 +26,6 @@ app.get('/check', (req, response) => __awaiter(void 0, void 0, void 0, function*
     response.status(200).send({ "message": "hello" });
 }));
 app.get('/bootstrap', (request, response) => __awaiter(void 0, void 0, void 0, function* () {
-    //await cosmosMonitor.bootstrap()
+    yield cosmosMonitor.bootstrap();
     response.status(200).send({ "message": "cosmos watcher started successfully" });
 }));
