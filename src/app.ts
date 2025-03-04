@@ -14,8 +14,7 @@ app.get('/check', async (req: Request, response: Response) => {
     response.status(200).send({"message": "hello"})
 });
 
-async function bootstrap() {
+app.get('/bootstrap', async (request, response) => {
     await cosmosMonitor.bootstrap()
-}
-
-bootstrap();
+    response.status(200).send({"message": "cosmos watcher started successfully"})
+})
