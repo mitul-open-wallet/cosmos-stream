@@ -53,6 +53,7 @@ class CosmosWalletMonitor {
                     this.websocket = new ws_1.default(this.cosmosHubWebSocketEndpoint);
                     this.websocket.on('open', () => {
                         this.isConnecting = false;
+                        this.reconnectAttempts = 0;
                         console.log("Connected");
                         this.susbscribeToEvent();
                         resolve();
@@ -92,11 +93,11 @@ class CosmosWalletMonitor {
         if (this.reconnectTimer) {
             clearTimeout(this.reconnectTimer);
         }
-        if (this.reconnectAttempts > this.maxReconnectionDelay) {
+        if (this.reconnectAttempts > 10) {
             console.error(`Tried ${this.reconnectAttempts} to connect web socket, but failed so giving up`);
             return;
         }
-        const delay = Math.min(this.maxReconnectionDelay * Math.pow(2, this.reconnectAttempts), this.maxReconnectionDelay);
+        const delay = Math.min(this.initialReconnectionDelay * Math.pow(2, this.reconnectAttempts), this.maxReconnectionDelay);
         this.reconnectTimer = setTimeout(() => __awaiter(this, void 0, void 0, function* () {
             this.reconnectAttempts++;
             try {
@@ -110,7 +111,6 @@ class CosmosWalletMonitor {
     setupRabbitMq() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                this.rabbitMqConnection = yield amqplib_1.default.connect(this.rabbitMqUrl);
                 this.rabbitMqConnection = yield amqplib_1.default.connect(this.rabbitMqUrl);
                 this.rabbitMqChannel = yield this.rabbitMqConnection.createChannel();
                 this.rabbitMqChannel.assertExchange(config_1.appConfig.exchangeName, 'direct');
@@ -253,9 +253,10 @@ class CosmosWalletMonitor {
     }
     stop() {
         return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                var _a;
-                (_a = this.websocket) === null || _a === void 0 ? void 0 : _a.on('close', () => {
+            return new Promise((resolve) => {
+                var _a, _b;
+                (_a = this.websocket) === null || _a === void 0 ? void 0 : _a.close();
+                (_b = this.websocket) === null || _b === void 0 ? void 0 : _b.on('close', () => {
                     console.log("Closed");
                     resolve();
                 });

@@ -6,7 +6,6 @@ import { TransferOperation } from "../models/model";
 import { QueuePayload } from "../models/model";
 import { appConfig } from "../config";
 import { TipReceiverItem } from "../models/model";
-import { it } from "node:test";
 
 export class CosmosWalletMonitor {
 
@@ -268,7 +267,8 @@ export class CosmosWalletMonitor {
     }
 
     async stop(): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
+            this.websocket?.close()
             this.websocket?.on('close', () => {
                 console.log("Closed")
                 resolve()
