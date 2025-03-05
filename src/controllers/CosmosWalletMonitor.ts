@@ -48,6 +48,7 @@ export class CosmosWalletMonitor {
                 )
                 this.websocket.on('open', () => {
                     this.isConnecting = false
+                    this.reconnectAttempts = 0
                     console.log("Connected")
                     this.susbscribeToEvent()
                     resolve()
@@ -87,13 +88,13 @@ export class CosmosWalletMonitor {
             clearTimeout(this.reconnectTimer)
         }
 
-        if (this.reconnectAttempts > this.maxReconnectionDelay) {
+        if (this.reconnectAttempts > 10) {
             console.error(`Tried ${this.reconnectAttempts} to connect web socket, but failed so giving up`)
             return
         }
 
         const delay = Math.min(
-            this.maxReconnectionDelay * Math.pow(2, this.reconnectAttempts),
+            this.initialReconnectionDelay * Math.pow(2, this.reconnectAttempts),
             this.maxReconnectionDelay
         )
 
@@ -109,7 +110,6 @@ export class CosmosWalletMonitor {
 
     private async setupRabbitMq(): Promise<void> {
         try {
-            this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl)
             this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl)
             this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
             this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
