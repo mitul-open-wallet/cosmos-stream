@@ -253,13 +253,25 @@ class CosmosWalletMonitor {
     }
     stop() {
         return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 var _a, _b;
-                (_a = this.websocket) === null || _a === void 0 ? void 0 : _a.close();
-                (_b = this.websocket) === null || _b === void 0 ? void 0 : _b.on('close', () => {
+                if (!this.websocket) {
+                    resolve();
+                    return;
+                }
+                if (this.websocket.readyState === 3) {
+                    resolve();
+                    return;
+                }
+                let timeoutID = setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                    reject(new Error("failed to close the web socket connection, so giving up"));
+                }), 10000);
+                (_a = this.websocket) === null || _a === void 0 ? void 0 : _a.on('close', () => {
+                    clearTimeout(timeoutID);
                     console.log("Closed");
                     resolve();
                 });
+                (_b = this.websocket) === null || _b === void 0 ? void 0 : _b.close();
             });
         });
     }

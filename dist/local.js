@@ -10,10 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const CosmosWalletMonitor_1 = require("./controllers/CosmosWalletMonitor");
-function main() {
+function startObservingCosmosChain() {
     return __awaiter(this, void 0, void 0, function* () {
         const cosmosMonitor = new CosmosWalletMonitor_1.CosmosWalletMonitor("wss://cosmos-rpc.publicnode.com:443/websocket");
         yield cosmosMonitor.bootstrap();
     });
 }
-main();
+setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
+    yield startObservingCosmosChain();
+}), 50000);

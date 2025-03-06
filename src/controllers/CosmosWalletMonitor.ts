@@ -267,12 +267,24 @@ export class CosmosWalletMonitor {
     }
 
     async stop(): Promise<void> {
-        return new Promise((resolve) => {
-            this.websocket?.close()
+        return new Promise((resolve, reject) => {
+            if (!this.websocket) {
+                resolve()
+                return
+            }
+            if (this.websocket.readyState === 3) {
+                resolve()
+                return
+            }
+            let timeoutID = setTimeout(async () => {
+                reject(new Error("failed to close the web socket connection, so giving up"))
+            }, 10000)
             this.websocket?.on('close', () => {
+                clearTimeout(timeoutID)
                 console.log("Closed")
                 resolve()
             })
+            this.websocket?.close()
         })
     }
 }
