@@ -18,4 +18,4 @@ function startObservingCosmosChain() {
 }
 setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
     yield startObservingCosmosChain();
-}), 50000);
+}), 5000);
