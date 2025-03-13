@@ -1,19 +1,17 @@
 import WebSocket from "ws";
 import amqp from 'amqplib';
 import { CosmosResponse } from "../models/model";
-import { EventAttribute } from "../models/model";
-import { TransferOperation } from "../models/model";
 import { QueuePayload } from "../models/model";
 import { appConfig } from "../config";
-import { TipReceiverItem } from "../models/model";
+import { PayloadGenerator } from "./PayloadGenerator";
 
 export class CosmosWalletMonitor {
 
-    private cosmosHubWebSocketEndpoint: string;
     private websocket: WebSocket | undefined = undefined;
     private rabbitMqChannel: amqp.Channel | undefined = undefined
     private rabbitMqConnection: amqp.Connection | undefined = undefined
     private reconnectTimer: NodeJS.Timeout | undefined = undefined
+    private payloadGenerator: PayloadGenerator | undefined
 
     private maxReconnectionDelay: number = 30000
     private initialReconnectionDelay = 1000
@@ -21,18 +19,21 @@ export class CosmosWalletMonitor {
     private isShuttingDown = false
     private isConnecting = false
 
-    constructor(cosmosHubWebSocketEndpoint: string, private rabbitMqUrl: string = appConfig.rabbitMqUrl) {
+    constructor(
+        private cosmosHubWebSocketEndpoint: string,
+        private rabbitMqUrl: string = appConfig.rabbitMqUrl
+    ) {
         this.cosmosHubWebSocketEndpoint = cosmosHubWebSocketEndpoint
     }
 
     async bootstrap(): Promise<void> {
-        console.log(`rabbit mq url: ${this.rabbitMqUrl}`)
         try {
             await this.start()
+            await this.setupRabbitMq() 
         } catch (error) {
             console.error("websocket error", error)
+            throw(error)
         }
-        await this.setupRabbitMq()
     }
 
     private async start(): Promise<void> {
@@ -66,7 +67,11 @@ export class CosmosWalletMonitor {
                 })
                 this.websocket.on('message', (data: WebSocket.Data) => {
                     let response: CosmosResponse = JSON.parse(data.toString())
-                    this.handleResponse(response)
+                    this.payloadGenerator = new PayloadGenerator(response)
+                    let payload = this.payloadGenerator.payload
+                    if (payload) {
+                        this.addMessageToChannel(payload)
+                    }
                 })
             } catch (error) {
                 this.isConnecting = false
@@ -74,11 +79,6 @@ export class CosmosWalletMonitor {
                 reject(error)
             }
         })
-    }
-
-    forceRestart() {
-        this.websocket?.close()
-        this.scheduleReconnect()
     }
 
     private scheduleReconnect() {
@@ -121,120 +121,6 @@ export class CosmosWalletMonitor {
         }
     }
 
-    private findValue(attributes: EventAttribute[], key: string): EventAttribute | undefined {
-        return attributes.find(attribute => {
-            return attribute.key === key
-        })
-    }
-
-    private handleResponse(response: CosmosResponse) {
-        const result = response.result
-        if (result) {
-            const txResult = result.data?.value.TxResult
-            let transactionHash = [""]
-            let topLevelEvents = result.events
-            if (topLevelEvents) {
-                transactionHash = topLevelEvents['tx.hash']
-            }
-    
-            if (txResult) {
-                const blockHeight = txResult.height
-                const events = txResult.result.events
-                
-                let tipPayEvents = events.filter(event => {
-                    return event.type === "tip_pay"
-                })
-                let tipPaidAmount = tipPayEvents.map(tipPayEvent => {
-                    let tipPaidAmount = this.findValue(tipPayEvent.attributes, "tip")
-                    let tipPayee = this.findValue(tipPayEvent.attributes, "tip_payee")
-                    if (tipPaidAmount && tipPayee) {
-                        return {
-                            address: tipPayee!.value,
-                            amount: tipPaidAmount!.value
-                        } as TipReceiverItem
-                    }
-                    return undefined
-                })
-                .filter(item => item !== undefined)
-    
-                
-                let feePayEvents = events.filter(event => {
-                    return event.type === "fee_pay"
-                })
-                let feeAmount = feePayEvents?.map(feeEvent => {
-                 let feeAttribute = this.findValue(feeEvent.attributes, "fee")
-                 return feeAttribute?.value
-                })
-                .filter(item => item !== undefined)
-                
-                let transferEvents = events.filter((event) => {
-                    return event.type === "transfer"
-                })
-                if (events) {
-                    const transferOperations = transferEvents?.map(event => {
-                        let recipientAttribute = this.findValue(event.attributes, "recipient")
-                        let senderAttribute = this.findValue(event.attributes, "sender")
-                        let amountAttribute = this.findValue(event.attributes, "amount")
-    
-                        let transferOperation: TransferOperation | undefined
-            
-                        if (recipientAttribute && senderAttribute && amountAttribute) {
-                            let decodedAmountValue = decodeBase64(amountAttribute.value)
-                            let decodedReceiverVaule = decodeBase64(recipientAttribute.value)
-                            let decodedSenderValue = decodeBase64(senderAttribute.value)
-                            
-                            let amountValue = decodedAmountValue.split(",").find(item => item.endsWith("uatom"))
-                            if (amountValue) {
-                                const { actualValue, unit } = this.separateValueAndUnit(amountValue)
-                                transferOperation = {
-                                    amount: actualValue,
-                                    unit: unit,
-                                    receiverAddress: decodedReceiverVaule,
-                                    senderAddress: decodedSenderValue
-                                }
-                            } else {
-                                return undefined
-                            }
-                        }
-                        return transferOperation
-                    })
-                    .filter(operation => operation !== undefined)
-                    let payload: QueuePayload = {
-                        date: new Date(),
-                        blockHeight: blockHeight,
-                        txHash: transactionHash.length !== 0 ? transactionHash[0] : undefined,
-                        tipReceiver: tipPaidAmount,
-                        feeAmount: feeAmount.length !== 0 ? feeAmount[0] : undefined,
-                        transferOperations: transferOperations
-                    }
-                    console.log(payload)
-                    this.addMessageToChannel(payload)
-                }
-            }
-        }
-    }
-
-    private separateValueAndUnit(input: string) {
-        let value = ""
-        let unit = ""
-        for (let i = 0; i < input.length; i++) {
-            let char = input[i]
-            if (char >= '0' && char <= '9') {
-                value += char
-            } else {
-                unit = input.substring(i)
-                break
-            }
-        }
-
-        let actualValue = parseInt(value, 10)
-
-        if (isNaN(actualValue) || unit === "") {
-            throw new Error("cant derive number and unit")
-        }
-        return { actualValue, unit }
-    }
-
     private susbscribeToEvent() {
         if (this.websocket) {
             const event = {
@@ -246,6 +132,8 @@ export class CosmosWalletMonitor {
                 }
             }
             this.websocket.send(JSON.stringify(event))
+        } else {
+            console.log("Initialise websocket before susbcribing to an event")
         }
     }
 
@@ -266,7 +154,7 @@ export class CosmosWalletMonitor {
         }
     }
 
-    async stop(): Promise<void> {
+    async closeWebSocketConnection(timeout: number): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.websocket) {
                 resolve()
@@ -278,7 +166,7 @@ export class CosmosWalletMonitor {
             }
             let timeoutID = setTimeout(async () => {
                 reject(new Error("failed to close the web socket connection, so giving up"))
-            }, 10000)
+            }, timeout)
             this.websocket?.on('close', () => {
                 clearTimeout(timeoutID)
                 console.log("Closed")
@@ -287,14 +175,4 @@ export class CosmosWalletMonitor {
             this.websocket?.close()
         })
     }
-}
-
-// base 64 encode and decode
-function isBase64(str: string): boolean {
-    const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
-    return base64Regex.test(str) && (str.length % 4) === 0;
-}
-
-function decodeBase64(string: string) {
-    return isBase64(string) ? Buffer.from(string, 'base64').toString('utf-8') : string
 }
