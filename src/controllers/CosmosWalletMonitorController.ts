@@ -19,8 +19,6 @@ enum ConnectionStatus {
 export class CosmosWalletMonitorController {
 
     private websocket: WebSocket | undefined = undefined;
-    private rabbitMqChannel: amqp.Channel | undefined = undefined
-    private rabbitMqConnection: amqp.Connection | undefined = undefined
     private reconnectTimer: NodeJS.Timeout | undefined = undefined
     private payloadGenerator: PayloadGenerator | undefined
     private connectionStatus: ConnectionStatus = ConnectionStatus.NOT_INITIALISED
@@ -33,8 +31,7 @@ export class CosmosWalletMonitorController {
 
     constructor(
         private cosmosHubWebSocketEndpoint: string,
-        callback: CosmosHubDataResponse,
-        private rabbitMqUrl: string = appConfig.rabbitMqUrl,
+        callback: CosmosHubDataResponse
         ) {
         this.cosmosHubWebSocketEndpoint = cosmosHubWebSocketEndpoint
         this.callback = callback
@@ -86,9 +83,6 @@ export class CosmosWalletMonitorController {
                     this.payloadGenerator = new PayloadGenerator(response)
                     let payload = this.payloadGenerator.payload
                     this.callback(payload)
-                    // if (payload) {
-                    //     this.addMessageToChannel(payload)
-                    // }
                 })
             } catch (error) {
                 this.connectionStatus = ConnectionStatus.SYSTEM_ERROR
