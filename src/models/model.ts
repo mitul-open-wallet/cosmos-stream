@@ -46,13 +46,17 @@ interface Events {
 }
 
 export interface TipReceiverItem {
-    amount: string
+    amount: CryptoAmount
     address: string
 }
 
-export interface TransferOperation {
+export interface CryptoAmount {
     amount: number
     unit: string
+}
+
+export interface TransferOperation {
+    amount: CryptoAmount
     receiverAddress: string
     senderAddress: string
 }
@@ -67,8 +71,8 @@ export interface QueuePayload {
     blockHeight: string
     txHash: string | undefined
     tipReceiver: TipReceiverItem[]
-    feeAmount: string | undefined
+    feeAmount: CryptoAmount | undefined
     transferOperations: TransferOperation[]
 }
 
-type EventType = "tx" | "coin_spent" | "coin_received" | "transfer" | "message"
+export type CosmosHubDataResponse = (payload: QueuePayload | undefined) => void
