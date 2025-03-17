@@ -3,4 +3,5 @@ export interface AppConfig {
     exchangeName: string
     cosmosHubRoutingKey: string
     rabbitMqUrl: string
+    wssEndpoint: string
 }

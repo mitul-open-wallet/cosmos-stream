@@ -74,3 +74,5 @@ export interface QueuePayload {
     feeAmount: CryptoAmount | undefined
     transferOperations: TransferOperation[]
 }
+
+export type CosmosHubDataResponse = (payload: QueuePayload | undefined) => void

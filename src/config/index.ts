@@ -8,6 +8,7 @@ export const appConfig: AppConfig = (() => {
         port: process.env.PORT ?? "3000",
         exchangeName: process.env.EXCHANGE_NAME ?? "",
         cosmosHubRoutingKey: process.env.COSMOS_HUB_ROUTING_KEY ?? "",
-        rabbitMqUrl: process.env.RABBIT_MQ_URL ?? ""
+        rabbitMqUrl: process.env.RABBIT_MQ_URL ?? "",
+        wssEndpoint: process.env.WSS_ENDPOINT ?? ""
     }
 })()
