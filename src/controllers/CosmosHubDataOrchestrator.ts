@@ -20,15 +20,16 @@ export class CosmosHubDataOrchestrator {
             await this.rabbitMQController.setupRabbitMq();
             await this.cosmosWalletMonitorController.bootstrap();
         } catch {
+            console.error("Failed to start the services", error)
             throw error
         }
     }
 
     async stop() {
         try {
-            await this.rabbitMQController.shutdown()
-            await this.cosmosWalletMonitorController?.shutdown()
+            await Promise.all([this.rabbitMQController.shutdown(), this.cosmosWalletMonitorController?.shutdown()])
         } catch {
+            console.error("Failed to stop the services", error)
             throw error
         }
     }

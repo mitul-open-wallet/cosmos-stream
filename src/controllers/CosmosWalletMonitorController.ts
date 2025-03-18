@@ -28,6 +28,7 @@ export class CosmosWalletMonitorController {
     private maxReconnectionAttempts = 10
     private initialReconnectionDelay = 1000
     private reconnectAttempts = 0
+    private shutdownInProgress = false
 
     constructor(
         private cosmosHubWebSocketEndpoint: string,
@@ -35,6 +36,28 @@ export class CosmosWalletMonitorController {
         ) {
         this.cosmosHubWebSocketEndpoint = cosmosHubWebSocketEndpoint
         this.callback = callback
+        this.setupSignalHandlers()
+    }
+
+    private setupSignalHandlers(): void {
+        // Handle graceful shutdown on SIGTERM and SIGINT
+        process.on('SIGTERM', this.handleTerminationSignal.bind(this, 'SIGTERM'));
+        process.on('SIGINT', this.handleTerminationSignal.bind(this, 'SIGINT'));
+    }
+
+    async handleTerminationSignal(operation: string) {
+        if (this.shutdownInProgress) {
+            return;
+        }
+        this.shutdownInProgress = true
+        try {
+            console.log("gradefully shutting down")
+            await this.shutdown()
+            process.exit(0)
+        } catch {
+            console.log("websocket termination", error)
+            process.exit(1)
+        }
     }
 
     async bootstrap(): Promise<void> {
@@ -151,6 +174,7 @@ export class CosmosWalletMonitorController {
                 reject(new Error("failed to close the web socket connection, so giving up"))
             }, timeout)
             this.websocket?.on('close', () => {
+                this.shutdownInProgress = false
                 clearTimeout(timeoutID)
                 console.log("Closed")
                 this.connectionStatus = ConnectionStatus.CLOSED
@@ -161,6 +185,7 @@ export class CosmosWalletMonitorController {
     }
 
     async shutdown(): Promise<void> {
+        this.shutdownInProgress = true
         if (this.reconnectTimer) {
             clearTimeout(this.reconnectTimer)
         }

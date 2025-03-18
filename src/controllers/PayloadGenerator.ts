@@ -1,12 +1,8 @@
 import { QueuePayload, CosmosResponse, TipReceiverItem, CryptoAmount, EventAttribute, TransferOperation } from "../models/model"
 
 export class PayloadGenerator {
-    
-    readonly payload: QueuePayload | undefined
 
-    constructor(private response: CosmosResponse) {
-        this.payload = this.handleResponse(response)
-    }
+    constructor(private response: CosmosResponse) {}
 
     private handleResponse(response: CosmosResponse): QueuePayload | undefined {
         const result = response.result
