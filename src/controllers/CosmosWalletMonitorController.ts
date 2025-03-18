@@ -103,8 +103,8 @@ export class CosmosWalletMonitorController {
                 })
                 this.websocket.on('message', (data: WebSocket.Data) => {
                     let response: CosmosResponse = JSON.parse(data.toString())
-                    this.payloadGenerator = new PayloadGenerator(response)
-                    let payload = this.payloadGenerator.payload
+                    this.payloadGenerator = new PayloadGenerator()
+                    let payload = this.payloadGenerator.handleResponse(response)
                     this.callback(payload)
                 })
             } catch (error) {

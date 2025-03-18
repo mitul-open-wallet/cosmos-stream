@@ -2,9 +2,9 @@ import { QueuePayload, CosmosResponse, TipReceiverItem, CryptoAmount, EventAttri
 
 export class PayloadGenerator {
 
-    constructor(private response: CosmosResponse) {}
+    constructor() {}
 
-    private handleResponse(response: CosmosResponse): QueuePayload | undefined {
+    handleResponse(response: CosmosResponse): QueuePayload | undefined {
         const result = response.result
             if (result) {
                 const txResult = result.data?.value.TxResult
