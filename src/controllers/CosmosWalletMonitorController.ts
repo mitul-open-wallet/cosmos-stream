@@ -1,10 +1,7 @@
 import WebSocket from "ws";
-import amqp from 'amqplib';
-import { CosmosHubDataResponse, CosmosResponse } from "../models/model";
-import { QueuePayload } from "../models/model";
-import { appConfig } from "../config";
-import { PayloadGenerator } from "./PayloadGenerator";
+import { CosmosHubDataResponse, CosmosResponse, PayloadParser } from "../models/model";
 import { error } from "console";
+import { CosmosHubPayloadGenerator } from "./PayloadGenerator";
 
 enum ConnectionStatus {
     NOT_INITIALISED,
@@ -20,7 +17,7 @@ export class CosmosWalletMonitorController {
 
     private websocket: WebSocket | undefined = undefined;
     private reconnectTimer: NodeJS.Timeout | undefined = undefined
-    private payloadGenerator: PayloadGenerator | undefined
+    private payloadGenerator: PayloadParser | undefined
     private connectionStatus: ConnectionStatus = ConnectionStatus.NOT_INITIALISED
     private callback: CosmosHubDataResponse
 
@@ -103,7 +100,7 @@ export class CosmosWalletMonitorController {
                 })
                 this.websocket.on('message', (data: WebSocket.Data) => {
                     let response: CosmosResponse = JSON.parse(data.toString())
-                    this.payloadGenerator = new PayloadGenerator()
+                    this.payloadGenerator = new CosmosHubPayloadGenerator()
                     let payload = this.payloadGenerator.handleResponse(response)
                     this.callback(payload)
                 })

@@ -61,11 +61,6 @@ export interface TransferOperation {
     senderAddress: string
 }
 
-enum TransferEvent {
-    received,
-    sent
-}
-
 export interface QueuePayload {
     date: Date
     blockHeight: string
@@ -76,3 +71,7 @@ export interface QueuePayload {
 }
 
 export type CosmosHubDataResponse = (payload: QueuePayload | undefined) => void
+
+export interface PayloadParser {
+    handleResponse(response: CosmosResponse): QueuePayload | undefined
+}

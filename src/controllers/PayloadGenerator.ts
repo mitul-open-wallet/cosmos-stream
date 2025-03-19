@@ -1,6 +1,7 @@
-import { QueuePayload, CosmosResponse, TipReceiverItem, CryptoAmount, EventAttribute, TransferOperation } from "../models/model"
+import { QueuePayload, CosmosResponse, TipReceiverItem, CryptoAmount, EventAttribute, TransferOperation, PayloadParser } from "../models/model"
 
-export class PayloadGenerator {
+
+export class CosmosHubPayloadGenerator implements PayloadParser {
 
     constructor() {}
 
@@ -56,9 +57,9 @@ export class PayloadGenerator {
                             let transferOperation: TransferOperation | undefined
                 
                             if (recipientAttribute && senderAttribute && amountAttribute) {
-                                let decodedAmountValue = this.decodeBase64(amountAttribute.value)
-                                let decodedReceiverVaule = this.decodeBase64(recipientAttribute.value)
-                                let decodedSenderValue = this.decodeBase64(senderAttribute.value)
+                                let decodedAmountValue = amountAttribute.value
+                                let decodedReceiverVaule = recipientAttribute.value
+                                let decodedSenderValue = senderAttribute.value
                                 
                                 let amountValue = decodedAmountValue.split(",").find(item => item.endsWith("uatom"))
                                 if (amountValue) {
