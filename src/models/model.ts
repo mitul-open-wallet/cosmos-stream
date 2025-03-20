@@ -75,3 +75,20 @@ export type CosmosHubDataResponse = (payload: QueuePayload | undefined) => void
 export interface PayloadParser {
     handleResponse(response: CosmosResponse): QueuePayload | undefined
 }
+
+export enum Blockchain {
+    COSMOS_HUB = "cosmos_hub",
+    INJECTIVE = "injective",
+    CELESTIA = "celestia"
+}
+
+export function amountDenomination(blockchain: Blockchain): string {
+    switch (blockchain) {
+        case Blockchain.COSMOS_HUB: 
+            return "uatom"
+        case Blockchain.INJECTIVE: 
+            return "inj"
+        case Blockchain.CELESTIA: 
+            return "utia"
+    }
+}

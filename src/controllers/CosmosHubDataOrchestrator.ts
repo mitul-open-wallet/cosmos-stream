@@ -17,8 +17,8 @@ export class CosmosHubDataOrchestrator {
                     this.rabbitMQController.addMessageToChannel(response)
                 }
             })
-            await this.rabbitMQController.setupRabbitMq();
             await this.cosmosWalletMonitorController.bootstrap();
+            await this.rabbitMQController.setupRabbitMq();
         } catch {
             console.error("Failed to start the services", error)
             throw error

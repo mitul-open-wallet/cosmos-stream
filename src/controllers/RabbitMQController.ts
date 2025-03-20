@@ -37,7 +37,6 @@ export class RabbitMQController {
             console.log(`buffered to channel: ${buffered}`)
         } else {
             console.log("no channel found")
-            throw new Error("no Rabbit MQ channel found")
         }
     }
 

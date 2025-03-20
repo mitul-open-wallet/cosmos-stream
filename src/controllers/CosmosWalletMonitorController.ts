@@ -102,6 +102,7 @@ export class CosmosWalletMonitorController {
                     let response: CosmosResponse = JSON.parse(data.toString())
                     this.payloadGenerator = new CosmosHubPayloadGenerator()
                     let payload = this.payloadGenerator.handleResponse(response)
+                    console.log(payload)
                     this.callback(payload)
                 })
             } catch (error) {

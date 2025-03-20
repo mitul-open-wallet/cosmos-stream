@@ -1,9 +1,13 @@
-import { QueuePayload, CosmosResponse, TipReceiverItem, CryptoAmount, EventAttribute, TransferOperation, PayloadParser } from "../models/model"
-
+import { appConfig } from "../config"
+import { QueuePayload, CosmosResponse, TipReceiverItem, CryptoAmount, EventAttribute, TransferOperation, PayloadParser, Blockchain, amountDenomination } from "../models/model"
 
 export class CosmosHubPayloadGenerator implements PayloadParser {
 
-    constructor() {}
+    amountDenomination: string
+
+    constructor() {
+        this.amountDenomination = amountDenomination(appConfig.blockchain)
+    }
 
     handleResponse(response: CosmosResponse): QueuePayload | undefined {
         const result = response.result
@@ -11,8 +15,14 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                 const txResult = result.data?.value.TxResult
                 let transactionHash = [""]
                 let topLevelEvents = result.events
+                let feesList: CryptoAmount[] = []
                 if (topLevelEvents) {
                     transactionHash = topLevelEvents['tx.hash']
+                    let feesArray = topLevelEvents["tx.fee"]
+                    feesList = feesArray.map(item => {
+                        return this.separateValueAndUnit(item)
+                    })
+                    console.log(feesList)
                 }
         
                 if (txResult) {
@@ -48,6 +58,7 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                     let transferEvents = events.filter((event) => {
                         return event.type === "transfer"
                     })
+                    console.log(`>> ${transferEvents.length}`)
                     if (events) {
                         const transferOperations = transferEvents?.map(event => {
                             let recipientAttribute = this.findValue(event.attributes, "recipient")
@@ -61,7 +72,7 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                                 let decodedReceiverVaule = recipientAttribute.value
                                 let decodedSenderValue = senderAttribute.value
                                 
-                                let amountValue = decodedAmountValue.split(",").find(item => item.endsWith("uatom"))
+                                let amountValue = decodedAmountValue.split(",").find(item => item.endsWith(this.amountDenomination))
                                 if (amountValue) {
                                     transferOperation = {
                                         amount: this.separateValueAndUnit(amountValue),
@@ -75,12 +86,19 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                             return transferOperation
                         })
                         .filter(operation => operation !== undefined)
+
+                        let finalFees: CryptoAmount | undefined = undefined
+                        if (feesList.length !== 0) {
+                            finalFees = feesList[0]
+                        } else {
+                            finalFees = feeAmount.length !== 0 ? this.separateValueAndUnit(feeAmount[0]) : undefined
+                        }
                         return {
                             date: new Date(),
                             blockHeight: blockHeight,
                             txHash: transactionHash.length !== 0 ? transactionHash[0] : undefined,
                             tipReceiver: tipPaidAmount,
-                            feeAmount: feeAmount.length !== 0 ? this.separateValueAndUnit(feeAmount[0]) : undefined,
+                            feeAmount: finalFees,
                             transferOperations: transferOperations
                         } as QueuePayload
                     }

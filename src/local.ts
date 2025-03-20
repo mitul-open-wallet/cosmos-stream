@@ -1,5 +1,6 @@
 import { CosmosHubDataOrchestrator } from "./controllers/CosmosHubDataOrchestrator";
 import { CosmosWalletMonitorController } from "./controllers/CosmosWalletMonitorController";
+import { Blockchain } from "./models/model";
 
 async function startObservingCosmosChain() {
     // let wsEndpoint = "wss://cosmos-rpc.publicnode.com:443/websocket"
@@ -11,6 +12,15 @@ async function startObservingCosmosChain() {
     cosmosHubDataOrchestrator.start();
 }
 
+function split(by: string) {
+    let subject = "12500inj"
+    console.log(by)
+    let index = subject.indexOf(by)
+    console.log(index)
+    let num = subject.substring(0, index)
+    console.log(num)
+}
+
 setTimeout(async () => {
     await startObservingCosmosChain()
-}, 5000)
+}, 1000)
