@@ -12,15 +12,15 @@ async function startObservingCosmosChain() {
     cosmosHubDataOrchestrator.start();
 }
 
-function split(by: string) {
-    let subject = "12500inj"
-    console.log(by)
-    let index = subject.indexOf(by)
-    console.log(index)
-    let num = subject.substring(0, index)
-    console.log(num)
-}
+// function split(by: string) {
+//     let subject = "12500inj"
+//     console.log(by)
+//     let index = subject.indexOf(by)
+//     console.log(index)
+//     let num = subject.substring(0, index)
+//     console.log(num)
+// }
 
 setTimeout(async () => {
     await startObservingCosmosChain()
-}, 1000)
+}, 10000)
