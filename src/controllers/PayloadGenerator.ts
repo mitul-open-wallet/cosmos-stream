@@ -19,9 +19,11 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                 if (topLevelEvents) {
                     transactionHash = topLevelEvents['tx.hash']
                     let feesArray = topLevelEvents["tx.fee"]
-                    feesList = feesArray.map(item => {
-                        return this.separateValueAndUnit(item)
-                    })
+                    if (feesArray !== undefined) {
+                        feesList = feesArray.map(item => {
+                            return this.separateValueAndUnit(item)
+                        })
+                    }
                     console.log(feesList)
                 }
         
@@ -58,7 +60,6 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                     let transferEvents = events.filter((event) => {
                         return event.type === "transfer"
                     })
-                    console.log(`>> ${transferEvents.length}`)
                     if (events) {
                         const transferOperations = transferEvents?.map(event => {
                             let recipientAttribute = this.findValue(event.attributes, "recipient")

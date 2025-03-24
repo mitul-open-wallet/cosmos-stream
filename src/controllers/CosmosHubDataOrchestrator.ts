@@ -1,6 +1,5 @@
 import { CosmosWalletMonitorController } from "./CosmosWalletMonitorController"
 import { RabbitMQController } from "./RabbitMQController"
-import { appConfig } from "../config"
 import { error } from "console"
 
 export class CosmosHubDataOrchestrator {
@@ -11,7 +10,7 @@ export class CosmosHubDataOrchestrator {
 
     async start() {
         try {
-            this.cosmosWalletMonitorController = new CosmosWalletMonitorController(appConfig.wssEndpoint, (response) => {
+            this.cosmosWalletMonitorController = new CosmosWalletMonitorController((response) => {
                 console.log(`received: ${response}`)
                 if (response) {
                     this.rabbitMQController.addMessageToChannel(response)

@@ -8,15 +8,12 @@ export const appConfig: AppConfig = (() => {
     return {
         port: process.env.PORT ?? "3000",
         exchangeName: process.env.EXCHANGE_NAME ?? "",
-        cosmosHubRoutingKey: process.env.COSMOS_HUB_ROUTING_KEY ?? "",
         rabbitMqUrl: process.env.RABBIT_MQ_URL ?? "",
-        wssEndpoint: process.env.WSS_ENDPOINT ?? "",
         blockchain: initBlockchain(process.env.BLOCKCHAIN_SLUG ?? "")
     }
 })()
 
 function initBlockchain(slug: string): Blockchain {
-    console.log(`>> ${slug}`)
     let concernedBlockchain = Object.values(Blockchain).find(value => {
         return value === slug
     })
@@ -24,4 +21,26 @@ function initBlockchain(slug: string): Blockchain {
         throw new Error(`cant resolve the network name: ${slug}`)
     }
     return concernedBlockchain
-}   
+} 
+
+export function wssEndpoint(blockchain: Blockchain): string {
+    if(blockchain === Blockchain.COSMOS_HUB) {
+        return "wss://cosmos-rpc.publicnode.com:443/websocket"
+    } else if (blockchain === Blockchain.INJECTIVE) {
+        return "wss://injective-rpc.publicnode.com:443/websocket"
+    } else if (blockchain === Blockchain.CELESTIA) {
+        return "wss://celestia-rpc.publicnode.com:443/websocket"
+    }
+    return ""
+}
+
+export function rabbitmqRoutingKey(blockchain: Blockchain): string {
+    if(blockchain === Blockchain.COSMOS_HUB) {
+        return "cosmos_hub"
+    } else if (blockchain === Blockchain.INJECTIVE) {
+        return "injective"
+    } else if (blockchain === Blockchain.CELESTIA) {
+        return "celestia"
+    }
+    return ""
+}

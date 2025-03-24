@@ -2,6 +2,7 @@ import WebSocket from "ws";
 import { CosmosHubDataResponse, CosmosResponse, PayloadParser } from "../models/model";
 import { error } from "console";
 import { CosmosHubPayloadGenerator } from "./PayloadGenerator";
+import { appConfig, wssEndpoint } from "../config";
 
 enum ConnectionStatus {
     NOT_INITIALISED,
@@ -19,6 +20,7 @@ export class CosmosWalletMonitorController {
     private reconnectTimer: NodeJS.Timeout | undefined = undefined
     private payloadGenerator: PayloadParser | undefined
     private connectionStatus: ConnectionStatus = ConnectionStatus.NOT_INITIALISED
+    private cosmosHubWebSocketEndpoint: string
     private callback: CosmosHubDataResponse
 
     private maxReconnectionDelay: number = 30000
@@ -28,10 +30,9 @@ export class CosmosWalletMonitorController {
     private shutdownInProgress = false
 
     constructor(
-        private cosmosHubWebSocketEndpoint: string,
         callback: CosmosHubDataResponse
         ) {
-        this.cosmosHubWebSocketEndpoint = cosmosHubWebSocketEndpoint
+        this.cosmosHubWebSocketEndpoint = wssEndpoint(appConfig.blockchain)
         this.callback = callback
         this.setupSignalHandlers()
     }

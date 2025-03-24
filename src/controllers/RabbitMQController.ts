@@ -1,16 +1,20 @@
 import amqp from 'amqplib';
-import { appConfig } from "../config";
+import { appConfig, rabbitmqRoutingKey } from "../config";
 import { QueuePayload } from '../models/model';
 import { error } from 'console';
 
 export class RabbitMQController {
     private rabbitMqChannel: amqp.Channel | undefined = undefined
     private rabbitMqConnection: amqp.Connection | undefined = undefined
+    private routingKey: string
 
-    constructor(private rabbitMqUrl: string = appConfig.rabbitMqUrl) {}
+    constructor(private rabbitMqUrl: string = appConfig.rabbitMqUrl) {
+        this.routingKey = rabbitmqRoutingKey(appConfig.blockchain)
+    }
 
     async setupRabbitMq(): Promise<void> {
         try {   
+            
             this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl)
             this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
             this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
@@ -27,7 +31,7 @@ export class RabbitMQController {
         if (this.rabbitMqChannel) {
             let buffered = this.rabbitMqChannel.publish(
                 appConfig.exchangeName,
-                appConfig.cosmosHubRoutingKey,
+                this.routingKey,
                 Buffer.from(JSON.stringify(payload)),
                 {
                     persistent: true, // Message survives broker restart

@@ -23,4 +23,4 @@ async function startObservingCosmosChain() {
 
 setTimeout(async () => {
     await startObservingCosmosChain()
-}, 10000)
+}, 5000)
