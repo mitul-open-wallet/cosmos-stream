@@ -39,8 +39,8 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                         let tipPayee = this.findValue(tipPayEvent.attributes, "tip_payee")
                         if (tipPaidAmount && tipPayee) {
                             return {
-                                address: tipPayee!.value,
-                                amount: this.separateValueAndUnit(tipPaidAmount!.value)
+                                address: tipPayee.value,
+                                amount: this.separateValueAndUnit(tipPaidAmount.value)
                             } as TipReceiverItem
                         }
                         return undefined

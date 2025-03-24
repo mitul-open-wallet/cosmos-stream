@@ -32,6 +32,7 @@ export class CosmosWalletMonitorController {
     constructor(
         callback: CosmosHubDataResponse
         ) {
+        console.log(`>>>> ${wssEndpoint(appConfig.blockchain)}`)
         this.cosmosHubWebSocketEndpoint = wssEndpoint(appConfig.blockchain)
         this.callback = callback
         this.setupSignalHandlers()
@@ -49,7 +50,7 @@ export class CosmosWalletMonitorController {
         }
         this.shutdownInProgress = true
         try {
-            console.log("gradefully shutting down")
+            console.log("gracefully shutting down")
             await this.shutdown()
             process.exit(0)
         } catch {
@@ -193,5 +194,11 @@ export class CosmosWalletMonitorController {
         } catch {
             throw error
         }
+    }
+
+    private split(by: string) {
+        let subject = "12500inj"
+        let index = subject.indexOf(by)
+        return subject.substring(0, index)
     }
 }

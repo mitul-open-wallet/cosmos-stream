@@ -9,6 +9,7 @@ export class RabbitMQController {
     private routingKey: string
 
     constructor(private rabbitMqUrl: string = appConfig.rabbitMqUrl) {
+        console.log(`>>> ${rabbitmqRoutingKey(appConfig.blockchain)}`)
         this.routingKey = rabbitmqRoutingKey(appConfig.blockchain)
     }
 
