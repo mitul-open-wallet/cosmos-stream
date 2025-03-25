@@ -98,11 +98,19 @@ export class CosmosWalletMonitorController {
                     }
                 })
                 this.websocket.on('message', (data: WebSocket.Data) => {
-                    let response: CosmosResponse = JSON.parse(data.toString())
-                    this.payloadGenerator = new CosmosHubPayloadGenerator()
-                    let payload = this.payloadGenerator.handleResponse(response)
-                    console.log(payload)
-                    this.callback(payload)
+                    try {
+                        let response: CosmosResponse = JSON.parse(data.toString())
+                        this.payloadGenerator = new CosmosHubPayloadGenerator()
+                        let payload = this.payloadGenerator.handleResponse(response)
+                        console.log(payload)
+                        this.callback(payload)
+                    } catch (error) {
+                        if (error instanceof SyntaxError) {
+                            console.error(`Wrong syntax`, error)
+                        } else {
+                            console.log("Unexpected error during parsing data")
+                        }
+                    }
                 })
             } catch (error) {
                 this.connectionStatus = ConnectionStatus.SYSTEM_ERROR
