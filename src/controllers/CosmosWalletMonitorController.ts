@@ -29,10 +29,7 @@ export class CosmosWalletMonitorController {
     private reconnectAttempts = 0
     private shutdownInProgress = false
 
-    constructor(
-        callback: CosmosHubDataResponse
-        ) {
-        console.log(`>>>> ${wssEndpoint(appConfig.blockchain)}`)
+    constructor(callback: CosmosHubDataResponse) {
         this.cosmosHubWebSocketEndpoint = wssEndpoint(appConfig.blockchain)
         this.callback = callback
         this.setupSignalHandlers()
