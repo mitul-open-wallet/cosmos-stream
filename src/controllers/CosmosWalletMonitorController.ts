@@ -171,8 +171,10 @@ export class CosmosWalletMonitorController {
         this.reconnectTimer = setTimeout(async () => {
             this.reconnectAttempts++
             try {
+                console.log("calling start, while reconnecting")
                 await this.start()
             } catch (error) {
+                console.log("failed during restart, reconnecting")
                 this.scheduleReconnect()
             }
         }, delay)
