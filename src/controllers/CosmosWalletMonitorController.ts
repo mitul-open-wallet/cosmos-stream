@@ -75,16 +75,34 @@ export class CosmosWalletMonitorController {
                 this.websocket = new WebSocket(
                     this.cosmosHubWebSocketEndpoint
                 )
+                let pingInterval: NodeJS.Timeout | null
                 this.websocket.on('open', () => {
                     this.connectionStatus = ConnectionStatus.CONNECTED
                     this.reconnectAttempts = 0
                     console.log("Connected")
                     this.subscribeToEvent()
+
+                    pingInterval = setInterval(() => {
+                        if (this.websocket?.readyState === WebSocket.OPEN) {
+                            this.websocket.ping();
+                            console.log("sending ping to keep connection alive")
+                        }
+                    }, 5000)
                     resolve()
                 })
                 this.websocket.on('close', (code, reason) => {
                     console.log(`>>>> WSS closed ${code} ${reason}`)
                     this.connectionStatus = ConnectionStatus.CLOSED
+                    if (pingInterval) {
+                        clearInterval(pingInterval)
+                        pingInterval = null
+                    }
+
+                    console.log("timeout, hence reconnecting")
+                    if (code === 1013) {
+                        this.connectionStatus = ConnectionStatus.CONNECTING
+                        this.scheduleReconnect()
+                    }
                 })
                 this.websocket.on('error', (error: Error) => {
                     console.log(`>>>> WSS error ${error}`)
@@ -104,15 +122,25 @@ export class CosmosWalletMonitorController {
                         this.payloadGenerator = new CosmosHubPayloadGenerator()
                         let payload = this.payloadGenerator.handleResponse(response)
                         console.log(payload)
-                        this.callback(payload)
-                        resolve()
+
+                        if (payload !== undefined) {
+                            this.callback(payload)
+                        } else {
+                            if (this.websocket?.readyState === WebSocket.OPEN) {
+                                try {
+                                    const errorMsg = { type: 'ERROR', message: "error.message" }
+                                    this.websocket.send(JSON.stringify(errorMsg))
+                                } catch (e) {
+                                    console.error("Failed to send error response", e)
+                                }
+                            }
+                        }
                     } catch (error) {
                         if (error instanceof SyntaxError) {
                             console.error(`Wrong syntax`, error)
                         } else {
                             console.log("Unexpected error during parsing data")
                         }
-                        reject(error)
                     }
                 })
             } catch (error) {
@@ -210,3 +238,5 @@ export class CosmosWalletMonitorController {
         return subject.substring(0, index)
     }
 }
+
+
