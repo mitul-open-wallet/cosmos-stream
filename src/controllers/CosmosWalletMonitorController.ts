@@ -105,12 +105,14 @@ export class CosmosWalletMonitorController {
                         let payload = this.payloadGenerator.handleResponse(response)
                         console.log(payload)
                         this.callback(payload)
+                        resolve()
                     } catch (error) {
                         if (error instanceof SyntaxError) {
                             console.error(`Wrong syntax`, error)
                         } else {
                             console.log("Unexpected error during parsing data")
                         }
+                        reject(error)
                     }
                 })
             } catch (error) {
