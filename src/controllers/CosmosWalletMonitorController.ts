@@ -109,7 +109,9 @@ export class CosmosWalletMonitorController {
                     console.log("timeout, hence reconnecting")
                     if (code === 1013) {
                         this.connectionStatus = ConnectionStatus.CONNECTING
-                        this.scheduleReconnect()
+                        setTimeout(async () => {
+                            this.scheduleReconnect()
+                        }, 120000)
                     }
                 })
                 this.websocket.on('error', (error: Error) => {
