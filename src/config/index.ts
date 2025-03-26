@@ -25,9 +25,9 @@ function initBlockchain(slug: string): Blockchain {
 
 export function wssEndpoint(blockchain: Blockchain): string {
     if(blockchain === Blockchain.COSMOS_HUB) {
-        return "wss://osmosis-rpc.publicnode.com:443/websocket"
+        return "wss://cosmos-rpc.publicnode.com:443/websocket/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506"
     } else if (blockchain === Blockchain.INJECTIVE) {
-        return "wss://injective-rpc.publicnode.com:443/websocket"
+        return "wss://injective-rpc.publicnode.com:443/websocket/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506"
     } else if (blockchain === Blockchain.CELESTIA) {
         return "wss://celestia-rpc.publicnode.com:443/websocket"
     }
