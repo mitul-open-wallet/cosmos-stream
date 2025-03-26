@@ -89,6 +89,13 @@ export class CosmosWalletMonitorController {
                             console.log("sending ping to keep connection alive")
                         }
                     }, 5000)
+
+                    setTimeout(async () => {
+                        console.log("test schedule restart")
+                        await this.shutdown()
+                        console.log("successfully shut down")
+                        this.scheduleReconnect()
+                    }, 30000)
                     resolve()
                 })
                 this.websocket.on('close', (code, reason) => {
