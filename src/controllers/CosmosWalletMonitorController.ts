@@ -67,7 +67,7 @@ export class CosmosWalletMonitorController {
 
     private async start(): Promise<void> {
         console.log(`>>> connection status: ${this.connectionStatus}`)
-        if (this.connectionStatus === ConnectionStatus.CONNECTING || this.connectionStatus === ConnectionStatus.CLOSING) {
+        if (this.connectionStatus === ConnectionStatus.CLOSING) {
             return Promise.resolve()
         }
         this.connectionStatus = ConnectionStatus.CONNECTING
