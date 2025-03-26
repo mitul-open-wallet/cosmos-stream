@@ -104,7 +104,11 @@ export class CosmosWalletMonitorController {
                         this.payloadGenerator = new CosmosHubPayloadGenerator()
                         let payload = this.payloadGenerator.handleResponse(response)
                         console.log(payload)
-                        this.callback(payload)
+                        if (payload !== undefined) {
+                            this.callback(payload)
+                        } else {
+                            console.log(`>>>> payload is undefined`)
+                        }
                     } catch (error) {
                         if (error instanceof SyntaxError) {
                             console.error(`Wrong syntax`, error)
