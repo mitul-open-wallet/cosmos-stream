@@ -83,10 +83,11 @@ export class CosmosWalletMonitorController {
                     resolve()
                 })
                 this.websocket.on('close', (code, reason) => {
-                    console.log("Closed")
+                    console.log(`>>>> WSS closed ${code} ${reason}`)
                     this.connectionStatus = ConnectionStatus.CLOSED
                 })
                 this.websocket.on('error', (error: Error) => {
+                    console.log(`>>>> WSS error ${error}`)
                     console.log(error)
                     // if it fails during start up, reject and report
                     if (this.reconnectAttempts === 0) {

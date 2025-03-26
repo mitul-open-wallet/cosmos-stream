@@ -12,7 +12,7 @@ export class CosmosHubDataOrchestrator {
         try {
             this.cosmosWalletMonitorController = new CosmosWalletMonitorController((response) => {
                 console.log(`received: ${response}`)
-                if (response) {
+                if (response !== undefined) {
                     this.rabbitMQController.addMessageToChannel(response)
                 }
             })
