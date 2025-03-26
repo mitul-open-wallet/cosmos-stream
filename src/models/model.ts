@@ -61,6 +61,15 @@ export interface TransferOperation {
     senderAddress: string
 }
 
+export const queuePayloadDummy = {
+    date: new Date(),
+    blockHeight: "",
+    txHash: "",
+    tipReceiver: [],
+    feeAmount: {amount: 0, unit: ""},
+    transferOperations: []
+} as QueuePayload
+
 export interface QueuePayload {
     date: Date
     blockHeight: string

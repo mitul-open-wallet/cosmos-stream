@@ -1,5 +1,5 @@
 import { appConfig } from "../config"
-import { QueuePayload, CosmosResponse, TipReceiverItem, CryptoAmount, EventAttribute, TransferOperation, PayloadParser, Blockchain, amountDenomination } from "../models/model"
+import { QueuePayload, CosmosResponse, TipReceiverItem, CryptoAmount, EventAttribute, TransferOperation, PayloadParser, Blockchain, amountDenomination, queuePayloadDummy } from "../models/model"
 
 export class CosmosHubPayloadGenerator implements PayloadParser {
 
@@ -10,14 +10,6 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
     }
 
     handleResponse(response: CosmosResponse): QueuePayload {
-        const dummy = {
-            date: new Date(),
-            blockHeight: "",
-            txHash: "",
-            tipReceiver: [],
-            feeAmount: {amount: 0, unit: ""},
-            transferOperations: []
-        }
         
         const result = response.result
             if (result) {
@@ -51,7 +43,7 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                                 amount: this.separateValueAndUnit(tipPaidAmount.value)
                             } as TipReceiverItem
                         }
-                        return dummy
+                        return undefined
                     })
                     .filter(item => item !== undefined)
         
@@ -89,7 +81,7 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                                         senderAddress: decodedSenderValue
                                     }
                                 } else {
-                                    return dummy
+                                    return queuePayloadDummy
                                 }
                             }
                             return transferOperation
@@ -113,7 +105,7 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                     }
                 }
             }
-            return dummy
+            return queuePayloadDummy
         }
 
         private separateValueAndUnit(input: string): CryptoAmount {

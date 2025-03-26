@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { CosmosHubDataResponse, CosmosResponse, PayloadParser } from "../models/model";
+import { CosmosHubDataResponse, CosmosResponse, PayloadParser, queuePayloadDummy } from "../models/model";
 import { error } from "console";
 import { CosmosHubPayloadGenerator } from "./PayloadGenerator";
 import { appConfig, wssEndpoint } from "../config";
@@ -131,7 +131,7 @@ export class CosmosWalletMonitorController {
                         let payload = this.payloadGenerator.handleResponse(response)
                         console.log(payload)
 
-                        if (payload !== undefined) {
+                        if (payload !== undefined && payload !== queuePayloadDummy) {
                             this.callback(payload)
                         } else {
                             if (this.websocket?.readyState === WebSocket.OPEN) {
