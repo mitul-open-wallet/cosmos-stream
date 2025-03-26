@@ -88,7 +88,7 @@ export class CosmosWalletMonitorController {
                             this.websocket.ping();
                             console.log("sending ping to keep connection alive")
                         }
-                    }, 5000)
+                    }, 30000)
 
                     // setTimeout(async () => {
                     //     console.log("test schedule restart")
