@@ -9,7 +9,16 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
         this.amountDenomination = amountDenomination(appConfig.blockchain)
     }
 
-    handleResponse(response: CosmosResponse): QueuePayload | undefined {
+    handleResponse(response: CosmosResponse): QueuePayload {
+        const dummy = {
+            date: new Date(),
+            blockHeight: "",
+            txHash: "",
+            tipReceiver: [],
+            feeAmount: {amount: 0, unit: ""},
+            transferOperations: []
+        }
+        
         const result = response.result
             if (result) {
                 const txResult = result.data?.value.TxResult
@@ -24,7 +33,6 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                             return this.separateValueAndUnit(item)
                         })
                     }
-                    console.log(feesList)
                 }
         
                 if (txResult) {
@@ -43,7 +51,7 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                                 amount: this.separateValueAndUnit(tipPaidAmount.value)
                             } as TipReceiverItem
                         }
-                        return undefined
+                        return dummy
                     })
                     .filter(item => item !== undefined)
         
@@ -81,7 +89,7 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                                         senderAddress: decodedSenderValue
                                     }
                                 } else {
-                                    return undefined
+                                    return dummy
                                 }
                             }
                             return transferOperation
@@ -105,7 +113,7 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                     }
                 }
             }
-            return undefined
+            return dummy
         }
 
         private separateValueAndUnit(input: string): CryptoAmount {

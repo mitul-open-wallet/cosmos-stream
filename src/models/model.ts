@@ -70,10 +70,10 @@ export interface QueuePayload {
     transferOperations: TransferOperation[]
 }
 
-export type CosmosHubDataResponse = (payload: QueuePayload | undefined) => void
+export type CosmosHubDataResponse = (payload: QueuePayload) => void
 
 export interface PayloadParser {
-    handleResponse(response: CosmosResponse): QueuePayload | undefined
+    handleResponse(response: CosmosResponse): QueuePayload
 }
 
 export enum Blockchain {

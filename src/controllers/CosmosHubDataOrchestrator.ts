@@ -12,12 +12,10 @@ export class CosmosHubDataOrchestrator {
         try {
             this.cosmosWalletMonitorController = new CosmosWalletMonitorController((response) => {
                 console.log(`received: ${response}`)
-                if (response !== undefined) {
-                    try {
-                        this.rabbitMQController.addMessageToChannel(response)
-                    } catch (error) {
-                        console.error("caught an error while adding message to the exchange", error)
-                    }
+                try {
+                    this.rabbitMQController.addMessageToChannel(response)
+                } catch (error) {
+                    console.error("caught an error while adding message to the exchange", error)
                 }
             })
             await this.cosmosWalletMonitorController.bootstrap();
