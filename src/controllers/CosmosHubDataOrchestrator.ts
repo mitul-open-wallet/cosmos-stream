@@ -18,8 +18,8 @@ export class CosmosHubDataOrchestrator {
                     console.error("caught an error while adding message to the exchange", error)
                 }
             })
-            await this.cosmosWalletMonitorController.bootstrap();
             await this.rabbitMQController.setupRabbitMq();
+            await this.cosmosWalletMonitorController.bootstrap();
         } catch {
             console.error("Failed to start the services", error)
             throw error

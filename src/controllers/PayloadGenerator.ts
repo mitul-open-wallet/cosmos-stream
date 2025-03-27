@@ -105,6 +105,7 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                     }
                 }
             }
+            console.log(`returning dummy: ${result}`)
             return queuePayloadDummy
         }
 

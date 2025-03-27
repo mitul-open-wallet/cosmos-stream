@@ -88,7 +88,7 @@ export class CosmosWalletMonitorController {
                             this.websocket.ping();
                             console.log("sending ping to keep connection alive")
                         }
-                    }, 30000)
+                    }, 6000)
 
                     // setTimeout(async () => {
                     //     console.log("test schedule restart")
@@ -129,9 +129,9 @@ export class CosmosWalletMonitorController {
                 this.websocket.on('message', (data: WebSocket.Data) => {
                     try {
                         let response: CosmosResponse = JSON.parse(data.toString())
+                        console.log(JSON.parse(data.toString()))
                         this.payloadGenerator = new CosmosHubPayloadGenerator()
                         let payload = this.payloadGenerator.handleResponse(response)
-                        console.log(payload)
 
                         if (payload !== undefined && payload !== queuePayloadDummy) {
                             this.callback(payload)
