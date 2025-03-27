@@ -10,7 +10,6 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
     }
 
     handleResponse(response: CosmosResponse): QueuePayload {
-        
         const result = response.result
             if (result) {
                 const txResult = result.data?.value.TxResult
