@@ -14,7 +14,7 @@ export class CosmosHubDataOrchestrator {
                 console.log(`received: ${response}`)
                 try {
                     console.log(">>>>>>>>>>>>>>")
-                    console.log(`>>>> ${response}`)
+                    console.log(JSON.stringify(response))
                     console.log(">>>>>>>>>>>>>>")
                     this.rabbitMQController.addMessageToChannel(response)
                 } catch (error) {
