@@ -11,7 +11,6 @@ export class CosmosHubDataOrchestrator {
     async start() {
         try {
             this.cosmosWalletMonitorController = new CosmosWalletMonitorController((response) => {
-                console.log(`received: ${response}`)
                 try {
                     console.log(">>>>>>>>>>>>>>")
                     console.log(JSON.stringify(response))
