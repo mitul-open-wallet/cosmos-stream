@@ -66,7 +66,6 @@ export class CosmosWalletMonitorController {
     }
 
     private async start(): Promise<void> {
-        console.log(`>>> connection status: ${this.connectionStatus}`)
         if (this.connectionStatus === ConnectionStatus.CLOSING) {
             return Promise.resolve()
         }
@@ -89,6 +88,7 @@ export class CosmosWalletMonitorController {
                             console.log("sending ping to keep connection alive")
                         }
                     }, 10000)
+                    resolve()
                 })
                 this.websocket.on('close', (code, reason) => {
                     console.log(`>>>> WSS closed ${code} ${reason}`)
@@ -103,7 +103,7 @@ export class CosmosWalletMonitorController {
                         this.connectionStatus = ConnectionStatus.CONNECTING
                         setTimeout(async () => {
                             this.scheduleReconnect()
-                        }, 120000)
+                        }, 60000)
                     }
                 })
                 this.websocket.on('error', (error: Error) => {
@@ -123,7 +123,7 @@ export class CosmosWalletMonitorController {
                         let response: CosmosResponse = JSON.parse(data.toString())
                         this.payloadGenerator = new CosmosHubPayloadGenerator()
                         let payload = this.payloadGenerator.handleResponse(response)
-
+                        console.log(`payload: ${payload}`)
                         if (payload !== undefined && payload !== queuePayloadDummy) {
                             this.callback(payload)
                         } else {
