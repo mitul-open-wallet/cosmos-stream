@@ -66,8 +66,8 @@ export const queuePayloadDummy = {
     blockHeight: "",
     txHash: "",
     tipReceiver: [],
-    feeAmount: {amount: 0, unit: ""},
-    transferOperations: []
+    feeAmount: 0,
+    transaction: undefined
 } as QueuePayload
 
 export interface QueuePayload {
@@ -75,8 +75,8 @@ export interface QueuePayload {
     blockHeight: string
     txHash: string | undefined
     tipReceiver: TipReceiverItem[]
-    feeAmount: CryptoAmount | undefined
-    transferOperations: TransferOperation[]
+    feeAmount: number
+    transaction: TransferOperation | undefined
 }
 
 export type CosmosHubDataResponse = (payload: QueuePayload) => void

@@ -45,29 +45,35 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                         return undefined
                     })
                     .filter(item => item !== undefined)
-        
-                    
+
                     let feePayEvents = events.filter(event => {
                         return event.type === "fee_pay"
                     })
                     let feeAmount = feePayEvents?.map(feeEvent => {
-                     let feeAttribute = this.findValue(feeEvent.attributes, "fee")
-                     return feeAttribute?.value
+                        let feeAttribute = this.findValue(feeEvent.attributes, "fee")
+                        return feeAttribute?.value
                     })
                     .filter(item => item !== undefined)
+
+                    let finalFees: number | undefined = undefined
+                    if (feeAmount.length !== 0) {
+                        finalFees = this.separateValueAndUnit(feeAmount[0]).amount
+                    }
                     
                     let transferEvents = events.filter((event) => {
                         return event.type === "transfer"
                     })
                     if (events) {
+                        // Find the actual transfer
                         const transferOperations = transferEvents?.map(event => {
                             let recipientAttribute = this.findValue(event.attributes, "recipient")
                             let senderAttribute = this.findValue(event.attributes, "sender")
                             let amountAttribute = this.findValue(event.attributes, "amount")
+                            let messageAttribute = this.findValue(event.attributes, "msg_index")
         
                             let transferOperation: TransferOperation | undefined
                 
-                            if (recipientAttribute && senderAttribute && amountAttribute) {
+                            if (recipientAttribute && senderAttribute && amountAttribute && messageAttribute) {
                                 let decodedAmountValue = amountAttribute.value
                                 let decodedReceiverVaule = recipientAttribute.value
                                 let decodedSenderValue = senderAttribute.value
@@ -79,27 +85,32 @@ export class CosmosHubPayloadGenerator implements PayloadParser {
                                         receiverAddress: decodedReceiverVaule,
                                         senderAddress: decodedSenderValue
                                     }
-                                } else {
-                                    return queuePayloadDummy
                                 }
                             }
                             return transferOperation
                         })
                         .filter(operation => operation !== undefined)
+                        // now find the transfer which denotes the fee
 
-                        let finalFees: CryptoAmount | undefined = undefined
-                        if (feesList.length !== 0) {
-                            finalFees = feesList[0]
-                        } else {
-                            finalFees = feeAmount.length !== 0 ? this.separateValueAndUnit(feeAmount[0]) : undefined
-                        }
+                        const senderAddress = transferOperations[0]?.senderAddress
+
+                        transferEvents.forEach(event => {
+                            let senderFound = this.findValue(event.attributes, "sender")?.value === senderAddress
+                            if (senderFound) {
+                                console.log(`>> found sender`)
+                                let feeValue = this.findValue(event.attributes, "amount")?.value
+                                if (this.findValue(event.attributes, "msg_index") === undefined && feeValue) {
+                                    finalFees = this.separateValueAndUnit(feeValue).amount
+                                }
+                            }
+                        })
                         return {
                             date: new Date(),
                             blockHeight: blockHeight,
                             txHash: transactionHash.length !== 0 ? transactionHash[0] : undefined,
                             tipReceiver: tipPaidAmount,
                             feeAmount: finalFees,
-                            transferOperations: transferOperations
+                            transaction: transferOperations.length !== 0 ? transferOperations[0] : undefined
                         } as QueuePayload
                     }
                 }
