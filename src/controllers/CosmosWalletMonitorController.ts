@@ -91,9 +91,19 @@ export class CosmosWalletMonitorController {
                     resolve()
 
                     setTimeout(async () => {
-                        console.log("force restart")
+                        console.log("force restart 1")
                         await this.scheduleReconnect()
                     }, 60000)
+
+                    setTimeout(async () => {
+                        console.log("force restart 2")
+                        await this.scheduleReconnect()
+                    }, 60000 * 2)
+
+                    setTimeout(async () => {
+                        console.log("force restart 3")
+                        await this.scheduleReconnect()
+                    }, 60000 * 3)
                 })
                 this.websocket.on('close', (code, reason) => {
                     console.log(`>>>> WSS closed ${code} ${reason}`)
