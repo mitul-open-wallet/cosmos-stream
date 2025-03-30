@@ -89,6 +89,11 @@ export class CosmosWalletMonitorController {
                         }
                     }, 10000)
                     resolve()
+
+                    setTimeout(async () => {
+                        console.log("force restart")
+                        await this.scheduleReconnect()
+                    }, 60000)
                 })
                 this.websocket.on('close', (code, reason) => {
                     console.log(`>>>> WSS closed ${code} ${reason}`)
@@ -198,7 +203,7 @@ export class CosmosWalletMonitorController {
         }
     }
 
-    async closeWebSocketConnection(timeout: number): Promise<void> {
+    private async closeWebSocketConnection(timeout: number): Promise<void> {
         this.connectionStatus = ConnectionStatus.CLOSING
         return new Promise((resolve, reject) => {
             if (!this.websocket) {
@@ -233,12 +238,6 @@ export class CosmosWalletMonitorController {
         } catch {
             throw error
         }
-    }
-
-    private split(by: string) {
-        let subject = "12500inj"
-        let index = subject.indexOf(by)
-        return subject.substring(0, index)
     }
 }
 
