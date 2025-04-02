@@ -17,7 +17,6 @@ export class GenericPayloadGenerator implements PayloadParser {
             let topLevelEvents = result.events
             if (txResult && topLevelEvents) {
                 const action = topLevelEvents["message.action"]
-                console.log(`action: ${action}`)
                 if (action && action.length !== 0 && action[0] === "/cosmos.bank.v1beta1.MsgSend") {
                     const blockHeight = txResult.height
                     const events = txResult.result.events
@@ -173,7 +172,6 @@ export class Base64PayloadGenerator implements PayloadParser {
             let topLevelEvents = result.events
             if (txResult && topLevelEvents) {
                 const action = topLevelEvents["message.action"]
-                console.log(`action: ${action}`)
                 if (action && action.length !== 0 && action[0] === "/cosmos.bank.v1beta1.MsgSend") {
                     transactionHash = topLevelEvents['tx.hash']
                     const blockHeight = txResult.height
@@ -262,7 +260,6 @@ export class Base64PayloadGenerator implements PayloadParser {
                                 }
                             }
                         })
-                        console.log(`tx: ${JSON.stringify(result)}`)
                         return {
                             date: new Date(),
                             blockHeight: blockHeight,
