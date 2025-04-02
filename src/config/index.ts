@@ -24,23 +24,39 @@ function initBlockchain(slug: string): Blockchain {
 } 
 
 export function wssEndpoint(blockchain: Blockchain): string {
-    if(blockchain === Blockchain.COSMOS_HUB) {
-        return "wss://atom.nownodes.io/wss/7a9449f4-dc1e-40ca-be00-72935bf0fd49"
-    } else if (blockchain === Blockchain.INJECTIVE) {
-        return "wss://injective-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
-    } else if (blockchain === Blockchain.CELESTIA) {
-        return "wss://celestia-rpc.publicnode.com:443/websocket"
+    switch (blockchain) {
+        case Blockchain.AKASH:
+            return "wss://akash-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+        case Blockchain.AXELAR:
+             return "wss://axelar-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+        case Blockchain.CELESTIA:
+            return "wss://celestia-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+        case Blockchain.COSMOS_HUB:
+             return "wss://atom.nownodes.io/wss/7a9449f4-dc1e-40ca-be00-72935bf0fd49"
+        case Blockchain.EVMOS:
+            return "wss://evmos-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+        case Blockchain.INJECTIVE:
+            return "wss://injective-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+        default:
+            return ""
     }
-    return ""
 }
 
 export function rabbitmqRoutingKey(blockchain: Blockchain): string {
-    if(blockchain === Blockchain.COSMOS_HUB) {
-        return "cosmos_hub"
-    } else if (blockchain === Blockchain.INJECTIVE) {
-        return "injective"
-    } else if (blockchain === Blockchain.CELESTIA) {
-        return "celestia"
+    switch (blockchain) {
+        case Blockchain.AKASH:
+            return "akash"
+        case Blockchain.AXELAR:
+            return "axelar"
+        case Blockchain.CELESTIA:
+            return "celestia"
+        case Blockchain.COSMOS_HUB:
+            return "cosmos_hub"
+        case Blockchain.EVMOS:
+            return "evmos"
+        case Blockchain.INJECTIVE:
+            return "injective"
+        default:
+            return ""
     }
-    return ""
 }

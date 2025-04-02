@@ -12,7 +12,6 @@ export class CosmosHubDataOrchestrator {
         try {
             this.cosmosWalletMonitorController = new CosmosWalletMonitorController((response) => {
                 try {
-                    console.log(JSON.stringify(response))
                     this.rabbitMQController.addMessageToChannel(response)
                 } catch (error) {
                     console.error("caught an error while adding message to the exchange", error)

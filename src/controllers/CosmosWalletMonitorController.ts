@@ -1,7 +1,7 @@
 import WebSocket from "ws";
-import { CosmosHubDataResponse, CosmosResponse, PayloadParser, queuePayloadDummy } from "../models/model";
+import { Blockchain, CosmosHubDataResponse, CosmosResponse, PayloadParser, queuePayloadDummy } from "../models/model";
 import { error } from "console";
-import { CosmosHubPayloadGenerator } from "./PayloadGenerator";
+import { GenericPayloadGenerator, Base64PayloadGenerator } from "./PayloadGenerator";
 import { appConfig, wssEndpoint } from "../config";
 
 enum ConnectionStatus {
@@ -31,6 +31,7 @@ export class CosmosWalletMonitorController {
 
     constructor(callback: CosmosHubDataResponse) {
         this.cosmosHubWebSocketEndpoint = wssEndpoint(appConfig.blockchain)
+        console.log(this.cosmosHubWebSocketEndpoint)
         this.callback = callback
         this.setupSignalHandlers()
     }
@@ -121,9 +122,8 @@ export class CosmosWalletMonitorController {
                 this.websocket.on('message', (data: WebSocket.Data) => {
                     try {
                         let response: CosmosResponse = JSON.parse(data.toString())
-                        this.payloadGenerator = new CosmosHubPayloadGenerator()
+                        this.payloadGenerator = this.payloadParser()
                         let payload = this.payloadGenerator.handleResponse(response)
-                        console.log(`payload: ${payload}`)
                         if (payload !== undefined && payload !== queuePayloadDummy) {
                             this.callback(payload)
                         } else {
@@ -232,6 +232,25 @@ export class CosmosWalletMonitorController {
             await this.closeWebSocketConnection(25000)
         } catch {
             throw error
+        }
+    }
+
+    payloadParser(): PayloadParser {
+        switch (appConfig.blockchain) {
+            case Blockchain.AXELAR:
+                return new GenericPayloadGenerator()
+            case Blockchain.CELESTIA:
+                return new Base64PayloadGenerator()
+            case Blockchain.COSMOS_HUB:
+                return new GenericPayloadGenerator()
+            case Blockchain.EVMOS:
+                return new GenericPayloadGenerator()
+            case Blockchain.INJECTIVE:
+                return new GenericPayloadGenerator()
+            case Blockchain.AKASH:
+                return new Base64PayloadGenerator()
+            default:
+                return new GenericPayloadGenerator()
         }
     }
 }

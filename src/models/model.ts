@@ -88,7 +88,10 @@ export interface PayloadParser {
 export enum Blockchain {
     COSMOS_HUB = "cosmos_hub",
     INJECTIVE = "injective",
-    CELESTIA = "celestia"
+    CELESTIA = "celestia",
+    EVMOS = "evmos",
+    AXELAR = "axelar",
+    AKASH = "akash"
 }
 
 export function amountDenomination(blockchain: Blockchain): string {
@@ -99,5 +102,13 @@ export function amountDenomination(blockchain: Blockchain): string {
             return "inj"
         case Blockchain.CELESTIA: 
             return "utia"
+        case Blockchain.EVMOS:
+            return "aevmos"
+        case Blockchain.AXELAR:
+            return "uaxl"
+        case Blockchain.AKASH:
+            return "uakt"
+        default:
+            return ""
     }
 }
