@@ -249,7 +249,7 @@ export class Base64PayloadGenerator implements PayloadParser {
                             let spenderFound = false
                             if (this.decodeBase64(spender?.value ?? "") === senderAddress) {
                                 spenderFound = true
-                                console.log(`found serder`)
+                                console.log(`found spender`)
                             }
                             let feeValue = this.findValue(event.attributes, this.encodeToBase64("amount"))?.value
                             if (feeValue) {
