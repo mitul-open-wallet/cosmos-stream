@@ -42,6 +42,28 @@ export class CosmosWalletMonitorController {
         process.on('SIGINT', this.handleTerminationSignal.bind(this, 'SIGINT'));
     }
 
+    async restartIfRequired() {
+        switch (this.connectionStatus) {
+            case ConnectionStatus.NOT_INITIALISED, ConnectionStatus.CLOSING, ConnectionStatus.CONNECTING, ConnectionStatus.CONNECTED:
+                return Promise.resolve()
+            default:
+                return new Promise<void>(async (resolve, reject)=> {
+                    switch (this.websocket?.readyState) {
+                        case WebSocket.CLOSED:
+                            await this.shutdown()
+                            await this.start()
+                            resolve()
+                        case WebSocket.CLOSING:
+                            reject(new Error("connection is closing, no need to restart"))
+                        case WebSocket.CONNECTING:
+                            reject(new Error("connection is progress, no need to restart"))
+                        case WebSocket.OPEN:
+                            reject(new Error("connection is already established, no need to restart"))
+                    }
+                })
+        }
+    }
+
     async handleTerminationSignal(operation: string) {
         if (this.shutdownInProgress) {
             return;

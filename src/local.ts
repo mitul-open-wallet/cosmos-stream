@@ -2,7 +2,7 @@ import { CosmosHubDataOrchestrator } from "./controllers/CosmosHubDataOrchestrat
 
 async function startObservingCosmosChain() {
     const cosmosHubDataOrchestrator = new CosmosHubDataOrchestrator();
-    cosmosHubDataOrchestrator.start();
+    cosmosHubDataOrchestrator.bootstrap();
 }
 
 setTimeout(async () => {

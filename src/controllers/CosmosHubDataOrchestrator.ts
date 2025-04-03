@@ -8,7 +8,22 @@ export class CosmosHubDataOrchestrator {
 
     constructor() {}
 
-    async start() {
+    async bootstrap() {
+        await this.start()
+        setTimeout(() => {
+            setInterval(async () => {
+                console.log("checking if restart is required")
+                try {
+                    await this.cosmosWalletMonitorController?.restartIfRequired()
+                    console.log("successfully restarted the service")
+                } catch (error) {
+                    console.error("did not get an opportunity to restart")
+                }
+            }, 60000 * 1)
+        }, 450000 * 1)
+    }
+
+    private async start() {
         try {
             this.cosmosWalletMonitorController = new CosmosWalletMonitorController((response) => {
                 try {
