@@ -50,8 +50,11 @@ export class CosmosWalletMonitorController {
                 return new Promise<void>(async (resolve, reject)=> {
                     switch (this.websocket?.readyState) {
                         case WebSocket.CLOSED:
+                            console.log("connection closed")
                             await this.shutdown()
+                            console.log("successfully shut down")
                             await this.start()
+                            console.log("successfully restarted service")
                             resolve()
                         case WebSocket.CLOSING:
                             reject(new Error("connection is closing, no need to restart"))

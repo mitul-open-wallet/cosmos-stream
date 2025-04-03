@@ -15,7 +15,6 @@ export class CosmosHubDataOrchestrator {
                 console.log("checking if restart is required")
                 try {
                     await this.cosmosWalletMonitorController?.restartIfRequired()
-                    console.log("successfully restarted the service")
                 } catch (error) {
                     console.error("did not get an opportunity to restart")
                 }
