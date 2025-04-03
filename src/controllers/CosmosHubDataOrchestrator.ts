@@ -20,7 +20,7 @@ export class CosmosHubDataOrchestrator {
                     console.error("did not get an opportunity to restart")
                 }
             }, 60000 * 1)
-        }, 450000 * 1)
+        }, 60000 * 2)
     }
 
     private async start() {
