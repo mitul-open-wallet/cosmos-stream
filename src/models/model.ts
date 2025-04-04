@@ -91,7 +91,9 @@ export enum Blockchain {
     CELESTIA = "celestia",
     EVMOS = "evmos",
     AXELAR = "axelar",
-    AKASH = "akash"
+    AKASH = "akash",
+    osmosis = "osmosis",
+    dydx = "dydx"
 }
 
 export function amountDenomination(blockchain: Blockchain): string {
@@ -108,6 +110,10 @@ export function amountDenomination(blockchain: Blockchain): string {
             return "uaxl"
         case Blockchain.AKASH:
             return "uakt"
+        case Blockchain.osmosis:
+            return "uosmo"
+        case Blockchain.dydx:
+            return "adydx"
         default:
             return ""
     }

@@ -37,6 +37,10 @@ export function wssEndpoint(blockchain: Blockchain): string {
             return "wss://evmos-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
         case Blockchain.INJECTIVE:
             return "wss://injective-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+        case Blockchain.osmosis:
+            return "wss://osmosis-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+        case Blockchain.dydx:
+            return "wss://dydx-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
         default:
             return ""
     }
