@@ -55,6 +55,7 @@ export class CosmosWalletMonitorController {
                             console.log("successfully shut down")
                             await this.start()
                             console.log("successfully restarted service")
+                            console.log(`wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                             resolve()
                         case WebSocket.CLOSING:
                             reject(new Error("connection is closing, no need to restart"))
