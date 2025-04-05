@@ -267,7 +267,7 @@ export class CosmosWalletMonitorController {
     payloadParser(): PayloadParser {
         switch (appConfig.blockchain) {
             case Blockchain.AXELAR:
-                return new GenericPayloadGenerator()
+                return new Base64PayloadGenerator()
             case Blockchain.CELESTIA:
                 return new Base64PayloadGenerator()
             case Blockchain.COSMOS_HUB:
