@@ -45,17 +45,20 @@ export class CosmosWalletMonitorController {
     async restartIfRequired() {
         switch (this.connectionStatus) {
             case ConnectionStatus.NOT_INITIALISED, ConnectionStatus.CLOSING, ConnectionStatus.CONNECTING, ConnectionStatus.CONNECTED:
+                console.log(`early termination wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                 return Promise.resolve()
             default:
                 return new Promise<void>(async (resolve, reject)=> {
                     switch (this.websocket?.readyState) {
                         case WebSocket.CLOSED:
                             console.log("connection closed")
+                            console.log(`before shutdown wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                             await this.shutdown()
+                            console.log(`after shutdown wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                             console.log("successfully shut down")
                             await this.start()
                             console.log("successfully restarted service")
-                            console.log(`wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
+                            console.log(`after restart wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                             resolve()
                         case WebSocket.CLOSING:
                             reject(new Error("connection is closing, no need to restart"))
