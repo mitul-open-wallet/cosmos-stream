@@ -44,7 +44,7 @@ export class CosmosWalletMonitorController {
 
     async restartIfRequired() {
         switch (this.connectionStatus) {
-            case ConnectionStatus.NOT_INITIALISED, ConnectionStatus.CLOSING, ConnectionStatus.CONNECTING, ConnectionStatus.CONNECTED:
+            case ConnectionStatus.NOT_INITIALISED, ConnectionStatus.CLOSING, ConnectionStatus.CONNECTED:
                 console.log(`early termination wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                 return Promise.resolve()
             default:
