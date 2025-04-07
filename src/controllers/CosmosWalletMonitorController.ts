@@ -56,6 +56,7 @@ export class CosmosWalletMonitorController {
                             await this.shutdown()
                             console.log(`after shutdown wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                             console.log("successfully shut down")
+                            console.log("restarting the service")
                             await this.start()
                             console.log("successfully restarted service")
                             console.log(`after restart wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
@@ -97,6 +98,7 @@ export class CosmosWalletMonitorController {
 
     private async start(): Promise<void> {
         if (this.connectionStatus === ConnectionStatus.CLOSING) {
+            console.log("connection closing - so early termination")
             return Promise.resolve()
         }
         this.connectionStatus = ConnectionStatus.CONNECTING
