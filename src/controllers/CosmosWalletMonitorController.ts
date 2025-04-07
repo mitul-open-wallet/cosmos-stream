@@ -61,27 +61,29 @@ export class CosmosWalletMonitorController {
                 console.log(`found connectimh status - wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                 return Promise.resolve()
             default:
-                return new Promise<void>(async (resolve, reject)=> {
-                    switch (this.websocket?.readyState) {
-                        case WebSocket.CLOSED:
-                            console.log("connection closed")
-                            console.log(`before shutdown wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
-                            await this.shutdown()
-                            console.log(`after shutdown wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
-                            console.log("successfully shut down")
-                            console.log("restarting the service")
-                            await this.start()
-                            console.log("successfully restarted service")
-                            console.log(`after restart wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
-                            resolve()
-                        case WebSocket.CLOSING:
-                            reject(new Error("connection is closing, no need to restart"))
-                        case WebSocket.CONNECTING:
-                            reject(new Error("connection is progress, no need to restart"))
-                        case WebSocket.OPEN:
-                            reject(new Error("connection is already established, no need to restart"))
-                    }
-                })
+                await this.shutdown()
+                await this.start()
+                // return new Promise<void>(async (resolve, reject)=> {
+                //     switch (this.websocket?.readyState) {
+                //         case WebSocket.CLOSED:
+                //             console.log("connection closed")
+                //             console.log(`before shutdown wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
+                //             await this.shutdown()
+                //             console.log(`after shutdown wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
+                //             console.log("successfully shut down")
+                //             console.log("restarting the service")
+                //             await this.start()
+                //             console.log("successfully restarted service")
+                //             console.log(`after restart wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
+                //             resolve()
+                //         case WebSocket.CLOSING:
+                //             reject(new Error("connection is closing, no need to restart"))
+                //         case WebSocket.CONNECTING:
+                //             reject(new Error("connection is progress, no need to restart"))
+                //         case WebSocket.OPEN:
+                //             reject(new Error("connection is already established, no need to restart"))
+                //     }
+                // })
         }
     }
 
@@ -262,12 +264,7 @@ export class CosmosWalletMonitorController {
           this.websocket.removeAllListeners('close');
           this.websocket.removeAllListeners('error');
           this.websocket.removeAllListeners('message');
-          
-          // If the connection is still open, close it
-          if (this.websocket.readyState === WebSocket.OPEN) {
-            console.log("Web socket open so closing it")
-            this.websocket.close();
-          }
+          this.websocket.close();
         }
       }
 
@@ -290,7 +287,6 @@ export class CosmosWalletMonitorController {
                 clearTimeout(timeoutID)
                 console.log("Closed and clearing the websocket")
                 this.connectionStatus = ConnectionStatus.CLOSED
-                this.websocket = undefined
                 resolve()
             })
         })
@@ -301,12 +297,16 @@ export class CosmosWalletMonitorController {
         if (this.reconnectTimer) {
             clearTimeout(this.reconnectTimer)
         }
+        this.cleanupWebSocket()
         try {
-            this.cleanupWebSocket()
             await this.observeWebSocketClosingProcess(25000)
+            this.connectionStatus = ConnectionStatus.CLOSED
+            this.websocket = undefined
         } catch {
+            this.connectionStatus = ConnectionStatus.CLOSED
+            this.websocket = undefined
             throw error
-        }
+        }   
     }
 
     payloadParser(): PayloadParser {
