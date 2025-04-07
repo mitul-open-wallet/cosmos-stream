@@ -43,9 +43,18 @@ export class CosmosWalletMonitorController {
     }
 
     async restartIfRequired() {
+        function logEarlyTermination() {
+            console.log(`early termination during restart`)
+        }
         switch (this.connectionStatus) {
-            case ConnectionStatus.NOT_INITIALISED, ConnectionStatus.CLOSING, ConnectionStatus.CONNECTED:
-                console.log(`early termination wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
+            case ConnectionStatus.NOT_INITIALISED:
+                logEarlyTermination()
+                return Promise.resolve()
+            case ConnectionStatus.CLOSING:
+                logEarlyTermination()
+                return Promise.resolve()
+            case ConnectionStatus.CONNECTED:
+                logEarlyTermination()
                 return Promise.resolve()
             default:
                 return new Promise<void>(async (resolve, reject)=> {
@@ -83,7 +92,7 @@ export class CosmosWalletMonitorController {
             process.exit(0)
         } catch {
             console.log("websocket termination", error)
-            process.exit(1)
+            throw error
         }
     }
 
@@ -101,6 +110,7 @@ export class CosmosWalletMonitorController {
             console.log("connection closing - so early termination")
             return Promise.resolve()
         }
+        this.cleanupWebSocket()
         this.connectionStatus = ConnectionStatus.CONNECTING
         return new Promise((resolve, reject) => {
             try {
@@ -229,7 +239,23 @@ export class CosmosWalletMonitorController {
         }
     }
 
-    private async closeWebSocketConnection(timeout: number): Promise<void> {
+    private cleanupWebSocket(): void {
+        if (this.websocket) {
+          // Remove all listeners
+          this.websocket.removeAllListeners('open');
+          this.websocket.removeAllListeners('close');
+          this.websocket.removeAllListeners('error');
+          this.websocket.removeAllListeners('message');
+          
+          // If the connection is still open, close it
+          if (this.websocket.readyState === WebSocket.OPEN) {
+            console.log("Web socket open so closing it")
+            this.websocket.close();
+          }
+        }
+      }
+
+    private async observeWebSocketClosingProcess(timeout: number): Promise<void> {
         this.connectionStatus = ConnectionStatus.CLOSING
         return new Promise((resolve, reject) => {
             if (!this.websocket) {
@@ -246,11 +272,11 @@ export class CosmosWalletMonitorController {
             this.websocket?.on('close', () => {
                 this.shutdownInProgress = false
                 clearTimeout(timeoutID)
-                console.log("Closed")
+                console.log("Closed and clearing the websocket")
                 this.connectionStatus = ConnectionStatus.CLOSED
+                this.websocket = undefined
                 resolve()
             })
-            this.websocket?.close()
         })
     }
 
@@ -260,7 +286,8 @@ export class CosmosWalletMonitorController {
             clearTimeout(this.reconnectTimer)
         }
         try {
-            await this.closeWebSocketConnection(25000)
+            this.cleanupWebSocket()
+            await this.observeWebSocketClosingProcess(25000)
         } catch {
             throw error
         }
