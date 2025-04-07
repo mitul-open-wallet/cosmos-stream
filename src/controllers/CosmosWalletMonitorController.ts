@@ -58,6 +58,7 @@ export class CosmosWalletMonitorController {
                 return Promise.resolve()
             case ConnectionStatus.CONNECTING:
                 console.log("connection in progress, restart not required")
+                console.log(`found connectimh status - wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                 return Promise.resolve()
             default:
                 return new Promise<void>(async (resolve, reject)=> {
