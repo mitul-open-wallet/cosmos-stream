@@ -26,19 +26,19 @@ function initBlockchain(slug: string): Blockchain {
 export function wssEndpoint(blockchain: Blockchain): string {
     switch (blockchain) {
         case Blockchain.AKASH:
-            return "wss://akash-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+            return "wss://akash-rpc.publicnode.com:443/websocket"//"wss://akash-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
         case Blockchain.AXELAR:
              return "wss://axelar-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
         case Blockchain.CELESTIA:
-            return "wss://celestia-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+            return "wss://celestia-ws.chainode.tech:33373/websocket"//"wss://celestia-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
         case Blockchain.COSMOS_HUB:
              return "wss://atom.nownodes.io/wss/7a9449f4-dc1e-40ca-be00-72935bf0fd49"
         case Blockchain.EVMOS:
             return "wss://evmos-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
         case Blockchain.INJECTIVE:
-            return "wss://injective-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+            return "wss://sentry.tm.injective.network:443/websocket"//wss://injective-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
         case Blockchain.osmosis:
-            return "wss://osmosis-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
+            return "wss://osmosis-rpc.publicnode.com:443/websocket"//"wss://osmosis-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
         case Blockchain.dydx:
             return "wss://dydx-rpc.publicnode.com:443/db0e01d9b3315761b60b379437249f97953755a46742618a28f2e12c57b3e506/websocket"
         default:
