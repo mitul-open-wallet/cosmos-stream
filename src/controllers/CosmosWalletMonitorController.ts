@@ -120,6 +120,7 @@ export class CosmosWalletMonitorController {
                 this.websocket = new WebSocket(
                     this.cosmosHubWebSocketEndpoint
                 )
+                this.websocket.binaryType = 'arraybuffer'
                 let pingInterval: NodeJS.Timeout | null
                 this.websocket.on('open', () => {
                     this.connectionStatus = ConnectionStatus.CONNECTED
@@ -163,7 +164,19 @@ export class CosmosWalletMonitorController {
                 })
                 this.websocket.on('message', (data: WebSocket.Data) => {
                     try {
-                        let response: CosmosResponse = JSON.parse(data.toString())
+                        let responseStr: string = ""
+                        // Handle different data types appropriately
+                        if (data instanceof ArrayBuffer) {
+                            // Convert ArrayBuffer to string using TextDecoder
+                            responseStr = new TextDecoder('utf-8').decode(data);
+                        } else if (Buffer.isBuffer(data)) {
+                            // Handle Node.js Buffer
+                            responseStr = data.toString('utf-8');
+                        } else {
+                            // Already a string
+                            responseStr = data.toString();
+                        }
+                        let response: CosmosResponse = JSON.parse(responseStr)
                         this.payloadGenerator = this.payloadParser()
                         let payload = this.payloadGenerator.handleResponse(response)
                         if (payload !== undefined && payload !== queuePayloadDummy) {
