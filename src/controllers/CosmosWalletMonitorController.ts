@@ -56,6 +56,9 @@ export class CosmosWalletMonitorController {
             case ConnectionStatus.CONNECTED:
                 logEarlyTermination()
                 return Promise.resolve()
+            case ConnectionStatus.CONNECTING:
+                console.log("connection in progress, restart not required")
+                return Promise.resolve()
             default:
                 return new Promise<void>(async (resolve, reject)=> {
                     switch (this.websocket?.readyState) {
@@ -142,10 +145,9 @@ export class CosmosWalletMonitorController {
 
                     console.log("timeout, hence reconnecting")
                     if (code === 1013) {
-                        this.connectionStatus = ConnectionStatus.CONNECTING
                         setTimeout(async () => {
                             this.scheduleReconnect()
-                        }, 10000)
+                        }, 5000)
                     }
                 })
                 this.websocket.on('error', (error: Error) => {
@@ -156,7 +158,6 @@ export class CosmosWalletMonitorController {
                         this.connectionStatus = ConnectionStatus.CLOSED
                         reject(error)
                     } else {
-                        this.connectionStatus = ConnectionStatus.CONNECTING
                         this.scheduleReconnect()
                     }
                 })
@@ -194,6 +195,7 @@ export class CosmosWalletMonitorController {
     }
 
     private scheduleReconnect() {
+        this.connectionStatus = ConnectionStatus.CONNECTING
         console.log(`scheduleReconnect ${this.reconnectAttempts}`)
         if (this.reconnectAttempts > this.maxReconnectionAttempts) {
             this.connectionStatus = ConnectionStatus.GIVEN_UP
