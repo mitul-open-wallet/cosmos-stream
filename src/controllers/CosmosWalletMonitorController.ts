@@ -145,22 +145,22 @@ export class CosmosWalletMonitorController {
                     }
 
                     console.log("timeout, hence reconnecting")
-                    if (code === 1013) {
-                        setTimeout(async () => {
-                            this.scheduleReconnect()
-                        }, 5000)
-                    }
+                    // if (code === 1013) {
+                    //     setTimeout(async () => {
+                    //         this.scheduleReconnect()
+                    //     }, 5000)
+                    // }
                 })
                 this.websocket.on('error', (error: Error) => {
                     console.log(`>>>> WSS error ${error}`)
                     console.log(error)
                     // if it fails during start up, reject and report
-                    if (this.reconnectAttempts === 0) {
+                    // if (this.reconnectAttempts === 0) {
                         this.connectionStatus = ConnectionStatus.CLOSED
                         reject(error)
-                    } else {
-                        this.scheduleReconnect()
-                    }
+                    // } else {
+                    //     this.scheduleReconnect()
+                    // }
                 })
                 this.websocket.on('message', (data: WebSocket.Data) => {
                     try {
