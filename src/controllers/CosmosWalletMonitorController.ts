@@ -24,9 +24,6 @@ export class CosmosWalletMonitorController {
     private cosmosHubWebSocketEndpoint: string
     private callback: CosmosHubDataResponse
 
-    private maxReconnectionDelay: number = 30000
-    private maxReconnectionAttempts = 10
-    private initialReconnectionDelay = 1000
     private reconnectAttempts = 0
     private shutdownInProgress = false
 
@@ -196,36 +193,6 @@ export class CosmosWalletMonitorController {
             }
         })
     }
-
-    // private scheduleReconnect() {
-    //     this.connectionStatus = ConnectionStatus.CONNECTING
-    //     console.log(`scheduleReconnect ${this.reconnectAttempts}`)
-    //     if (this.reconnectAttempts > this.maxReconnectionAttempts) {
-    //         this.connectionStatus = ConnectionStatus.GIVEN_UP
-    //         console.error(`Tried ${this.reconnectAttempts} to connect web socket, but failed so giving up`)
-    //         return
-    //     }
-        
-    //     if (this.reconnectTimer) {
-    //         clearTimeout(this.reconnectTimer)
-    //     }
-
-    //     const delay = Math.min(
-    //         this.initialReconnectionDelay * Math.pow(2, this.reconnectAttempts),
-    //         this.maxReconnectionDelay
-    //     )
-
-    //     this.reconnectTimer = setTimeout(async () => {
-    //         this.reconnectAttempts++
-    //         try {
-    //             console.log(`calling start, while reconnecting, connection status: ${this.connectionStatus}`)
-    //             await this.start()
-    //         } catch (error) {
-    //             console.log("failed during restart, reconnecting")
-    //             this.scheduleReconnect()
-    //         }
-    //     }, delay)
-    // }
 
     private subscribeToEvent() {
         if (this.websocket) {
