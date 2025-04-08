@@ -10,6 +10,7 @@ export class CosmosHubDataOrchestrator {
 
     async bootstrap() {
         await this.start()
+        let oneMinute = 60000
         setTimeout(() => {
             setInterval(async () => {
                 console.log("checking if restart is required")
@@ -18,8 +19,8 @@ export class CosmosHubDataOrchestrator {
                 } catch (error) {
                     console.error("did not get an opportunity to restart")
                 }
-            }, 60000 * 4)
-        }, 60000 * 2)
+            }, oneMinute * 2)
+        }, oneMinute * 2)
     }
 
     private async start() {

@@ -28,6 +28,7 @@ export class CosmosWalletMonitorController {
     private initialReconnectionDelay = 1000
     private reconnectAttempts = 0
     private shutdownInProgress = false
+    private shouldScheduleRestart = false
 
     constructor(callback: CosmosHubDataResponse) {
         this.cosmosHubWebSocketEndpoint = wssEndpoint(appConfig.blockchain)
@@ -66,31 +67,11 @@ export class CosmosWalletMonitorController {
                 console.log("sucessfully shut down")
                 await this.start()
                 console.log("sucessfully restarted")
-                // return new Promise<void>(async (resolve, reject)=> {
-                //     switch (this.websocket?.readyState) {
-                //         case WebSocket.CLOSED:
-                //             console.log("connection closed")
-                //             console.log(`before shutdown wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
-                //             await this.shutdown()
-                //             console.log(`after shutdown wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
-                //             console.log("successfully shut down")
-                //             console.log("restarting the service")
-                //             await this.start()
-                //             console.log("successfully restarted service")
-                //             console.log(`after restart wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
-                //             resolve()
-                //         case WebSocket.CLOSING:
-                //             reject(new Error("connection is closing, no need to restart"))
-                //         case WebSocket.CONNECTING:
-                //             reject(new Error("connection is progress, no need to restart"))
-                //         case WebSocket.OPEN:
-                //             reject(new Error("connection is already established, no need to restart"))
-                //     }
-                // })
         }
     }
 
     async handleTerminationSignal(operation: string) {
+        console.log(`received sigterm: ${operation}`)
         if (this.shutdownInProgress) {
             return;
         }
@@ -134,12 +115,6 @@ export class CosmosWalletMonitorController {
                     console.log("Connected")
                     this.subscribeToEvent()
 
-                    setTimeout(async () => {
-                        if (this.websocket?.readyState === WebSocket.OPEN) {
-                            await this.shutdown()
-                        }
-                    }, 50000)
-
                     pingInterval = setInterval(() => {
                         if (this.websocket?.readyState === WebSocket.OPEN) {
                             this.websocket.ping();
@@ -157,22 +132,27 @@ export class CosmosWalletMonitorController {
                     }
 
                     console.log("timeout, hence reconnecting")
-                    // if (code === 1013) {
-                    //     setTimeout(async () => {
-                    //         this.scheduleReconnect()
-                    //     }, 5000)
-                    // }
+                    if (this.shouldScheduleRestart) {
+                        if (code === 1013) {
+                            setTimeout(async () => {
+                                this.scheduleReconnect()
+                            }, 5000)
+                        }
+                    }
                 })
                 this.websocket.on('error', (error: Error) => {
                     console.log(`>>>> WSS error ${error}`)
                     console.log(error)
                     // if it fails during start up, reject and report
-                    // if (this.reconnectAttempts === 0) {
+                    if (this.reconnectAttempts === 0) {
                         this.connectionStatus = ConnectionStatus.CLOSED
                         reject(error)
-                    // } else {
-                    //     this.scheduleReconnect()
-                    // }
+                    } else {
+                        if (this.shouldScheduleRestart) {
+                            this.scheduleReconnect()
+                        }
+                        reject(error)
+                    }
                 })
                 this.websocket.on('message', (data: WebSocket.Data) => {
                     try {
