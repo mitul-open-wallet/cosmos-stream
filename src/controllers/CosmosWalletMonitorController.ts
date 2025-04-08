@@ -11,7 +11,8 @@ enum ConnectionStatus {
     CLOSING,
     CLOSED,
     GIVEN_UP,
-    SYSTEM_ERROR
+    SYSTEM_ERROR,
+    NEEDS_RESTART
 }
 
 export class CosmosWalletMonitorController {
@@ -28,7 +29,6 @@ export class CosmosWalletMonitorController {
     private initialReconnectionDelay = 1000
     private reconnectAttempts = 0
     private shutdownInProgress = false
-    private shouldScheduleRestart = false
 
     constructor(callback: CosmosHubDataResponse) {
         this.cosmosHubWebSocketEndpoint = wssEndpoint(appConfig.blockchain)
@@ -132,15 +132,14 @@ export class CosmosWalletMonitorController {
                     }
 
                     console.log("timeout, hence reconnecting")
-                    if (this.shouldScheduleRestart) {
-                        if (code === 1013) {
-                            setTimeout(async () => {
-                                this.scheduleReconnect()
-                            }, 5000)
-                        }
+                    if (code === 1013) {
+                        this.connectionStatus = ConnectionStatus.NEEDS_RESTART
+                        setTimeout(async () => {
+                            await this.restartIfRequired()
+                        }, 5000)
                     }
                 })
-                this.websocket.on('error', (error: Error) => {
+                this.websocket.on('error', async (error: Error) => {
                     console.log(`>>>> WSS error ${error}`)
                     console.log(error)
                     // if it fails during start up, reject and report
@@ -148,9 +147,8 @@ export class CosmosWalletMonitorController {
                         this.connectionStatus = ConnectionStatus.CLOSED
                         reject(error)
                     } else {
-                        if (this.shouldScheduleRestart) {
-                            this.scheduleReconnect()
-                        }
+                        this.connectionStatus = ConnectionStatus.NEEDS_RESTART
+                        await this.restartIfRequired()
                         reject(error)
                     }
                 })
@@ -199,35 +197,35 @@ export class CosmosWalletMonitorController {
         })
     }
 
-    private scheduleReconnect() {
-        this.connectionStatus = ConnectionStatus.CONNECTING
-        console.log(`scheduleReconnect ${this.reconnectAttempts}`)
-        if (this.reconnectAttempts > this.maxReconnectionAttempts) {
-            this.connectionStatus = ConnectionStatus.GIVEN_UP
-            console.error(`Tried ${this.reconnectAttempts} to connect web socket, but failed so giving up`)
-            return
-        }
+    // private scheduleReconnect() {
+    //     this.connectionStatus = ConnectionStatus.CONNECTING
+    //     console.log(`scheduleReconnect ${this.reconnectAttempts}`)
+    //     if (this.reconnectAttempts > this.maxReconnectionAttempts) {
+    //         this.connectionStatus = ConnectionStatus.GIVEN_UP
+    //         console.error(`Tried ${this.reconnectAttempts} to connect web socket, but failed so giving up`)
+    //         return
+    //     }
         
-        if (this.reconnectTimer) {
-            clearTimeout(this.reconnectTimer)
-        }
+    //     if (this.reconnectTimer) {
+    //         clearTimeout(this.reconnectTimer)
+    //     }
 
-        const delay = Math.min(
-            this.initialReconnectionDelay * Math.pow(2, this.reconnectAttempts),
-            this.maxReconnectionDelay
-        )
+    //     const delay = Math.min(
+    //         this.initialReconnectionDelay * Math.pow(2, this.reconnectAttempts),
+    //         this.maxReconnectionDelay
+    //     )
 
-        this.reconnectTimer = setTimeout(async () => {
-            this.reconnectAttempts++
-            try {
-                console.log(`calling start, while reconnecting, connection status: ${this.connectionStatus}`)
-                await this.start()
-            } catch (error) {
-                console.log("failed during restart, reconnecting")
-                this.scheduleReconnect()
-            }
-        }, delay)
-    }
+    //     this.reconnectTimer = setTimeout(async () => {
+    //         this.reconnectAttempts++
+    //         try {
+    //             console.log(`calling start, while reconnecting, connection status: ${this.connectionStatus}`)
+    //             await this.start()
+    //         } catch (error) {
+    //             console.log("failed during restart, reconnecting")
+    //             this.scheduleReconnect()
+    //         }
+    //     }, delay)
+    // }
 
     private subscribeToEvent() {
         if (this.websocket) {
