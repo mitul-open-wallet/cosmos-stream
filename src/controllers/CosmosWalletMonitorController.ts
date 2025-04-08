@@ -120,7 +120,7 @@ export class CosmosWalletMonitorController {
                     }, 7000)
                     resolve()
                 })
-                this.websocket.on('close', (code, reason) => {
+                this.websocket.on('close', async (code, reason) => {
                     console.log(`>>>> WSS closed ${code} ${reason}`)
                     this.connectionStatus = ConnectionStatus.CLOSED
                     if (pingInterval) {
@@ -129,11 +129,20 @@ export class CosmosWalletMonitorController {
                     }
 
                     console.log("timeout, hence reconnecting")
-                    if (code === 1013) {
+                    if (code === 1013 || code === 1006) {
                         this.connectionStatus = ConnectionStatus.NEEDS_RESTART
-                        setTimeout(async () => {
+                        try {
                             await this.restartIfRequired()
-                        }, 5000)
+                        } catch (error) {
+                            console.log(`error during restart`, error)
+                            setTimeout(async () => {
+                                try {
+                                    await this.restartIfRequired()
+                                } catch (error) {
+                                    console.log(`error during restart thrown from catch block, needs to be investigated`, error)
+                                }
+                            }, 15000)
+                        }
                     }
                 })
                 this.websocket.on('error', async (error: Error) => {
@@ -145,8 +154,21 @@ export class CosmosWalletMonitorController {
                         reject(error)
                     } else {
                         this.connectionStatus = ConnectionStatus.NEEDS_RESTART
-                        await this.restartIfRequired()
-                        reject(error)
+                        try {
+                            await this.restartIfRequired()
+                            resolve()
+                        } catch (error) {
+                            console.log(`error during restart`, error)
+                            setTimeout(async () => {
+                                try {
+                                    await this.restartIfRequired()
+                                    resolve()
+                                } catch (error) {
+                                    console.log(`error during restart thrown from catch block, needs to be investigated`, error)
+                                    reject(error)
+                                }
+                            }, 15000)
+                        }
                     }
                 })
                 this.websocket.on('message', (data: WebSocket.Data) => {
