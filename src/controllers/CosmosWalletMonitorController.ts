@@ -58,11 +58,14 @@ export class CosmosWalletMonitorController {
                 return Promise.resolve()
             case ConnectionStatus.CONNECTING:
                 console.log("connection in progress, restart not required")
-                console.log(`found connectimh status - wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
+                console.log(`found connect status - wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                 return Promise.resolve()
             default:
+                console.log(`found connect status - wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
                 await this.shutdown()
+                console.log("sucessfully shut down")
                 await this.start()
+                console.log("sucessfully restarted")
                 // return new Promise<void>(async (resolve, reject)=> {
                 //     switch (this.websocket?.readyState) {
                 //         case WebSocket.CLOSED:
@@ -130,6 +133,12 @@ export class CosmosWalletMonitorController {
                     this.reconnectAttempts = 0
                     console.log("Connected")
                     this.subscribeToEvent()
+
+                    setTimeout(async () => {
+                        if (this.websocket?.readyState === WebSocket.OPEN) {
+                            await this.shutdown()
+                        }
+                    }, 50000)
 
                     pingInterval = setInterval(() => {
                         if (this.websocket?.readyState === WebSocket.OPEN) {
