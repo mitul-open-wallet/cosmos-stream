@@ -293,14 +293,10 @@ export class CosmosWalletMonitorController {
                 return new Base64PayloadGenerator()
             case Blockchain.COSMOS_HUB:
                 return new GenericPayloadGenerator()
-            case Blockchain.EVMOS:
-                return new GenericPayloadGenerator()
             case Blockchain.INJECTIVE:
                 return new GenericPayloadGenerator()
             case Blockchain.AKASH:
                 return new Base64PayloadGenerator()
-            case Blockchain.dydx:
-                return new GenericPayloadGenerator()
             case Blockchain.osmosis:
                 return new GenericPayloadGenerator()
             default:
