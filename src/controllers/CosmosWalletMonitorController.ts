@@ -23,6 +23,7 @@ export class CosmosWalletMonitorController {
     private connectionStatus: ConnectionStatus = ConnectionStatus.NOT_INITIALISED
     private cosmosHubWebSocketEndpoint: string
     private callback: CosmosHubDataResponse
+    private lastKnownMessageTimestamp: Date | undefined
 
     private reconnectAttempts = 0
     private shutdownInProgress = false
@@ -116,6 +117,9 @@ export class CosmosWalletMonitorController {
                         if (this.websocket?.readyState === WebSocket.OPEN) {
                             this.websocket.ping();
                             console.log("sending ping to keep connection alive")
+                            if (this.lastKnownMessageTimestamp) {
+                                console.log(`Last known message at: ${this.lastKnownMessageTimestamp}`)
+                            }
                         }
                     }, 7000)
                     resolve()
@@ -173,28 +177,29 @@ export class CosmosWalletMonitorController {
                 })
                 this.websocket.on('message', (data: WebSocket.Data) => {
                     try {
-                        let responseStr: string = ""
+                        let responseString: string = ""
                         // Handle different data types appropriately
                         if (data instanceof ArrayBuffer) {
                             // Convert ArrayBuffer to string using TextDecoder
-                            responseStr = new TextDecoder('utf-8').decode(data);
+                            responseString = new TextDecoder('utf-8').decode(data);
                         } else if (Buffer.isBuffer(data)) {
                             // Handle Node.js Buffer
-                            responseStr = data.toString('utf-8');
+                            responseString = data.toString('utf-8');
                         } else {
                             // Already a string
-                            responseStr = data.toString();
+                            responseString = data.toString();
                         }
-                        let response: CosmosResponse = JSON.parse(responseStr)
+                        let response: CosmosResponse = JSON.parse(responseString)
                         this.payloadGenerator = this.payloadParser()
                         let payload = this.payloadGenerator.handleResponse(response)
                         if (payload !== undefined && payload !== queuePayloadDummy) {
+                            this.lastKnownMessageTimestamp = new Date()
                             this.callback(payload)
                         } else {
                             if (this.websocket?.readyState === WebSocket.OPEN) {
                                 try {
-                                    const errorMsg = { type: 'ERROR', message: "error.message" }
-                                    this.websocket.send(JSON.stringify(errorMsg))
+                                    const errorMessage = { type: 'ERROR', message: "error.message" }
+                                    this.websocket.send(JSON.stringify(errorMessage))
                                 } catch (e) {
                                     console.error("Failed to send error response", e)
                                 }
