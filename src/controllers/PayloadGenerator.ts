@@ -46,7 +46,6 @@ export class GenericPayloadGenerator implements PayloadParser {
                             let senderAttribute = this.findValue(event.attributes, "sender")
                             let amountAttribute = this.findValue(event.attributes, "amount")
                             let messageAttribute = this.findValue(event.attributes, "msg_index")
-                            console.log(`msg_index: ${messageAttribute}`)
                             let transferOperation: TransferOperation | undefined
 
                             if (recipientAttribute && senderAttribute && amountAttribute && messageAttribute) {
@@ -56,7 +55,6 @@ export class GenericPayloadGenerator implements PayloadParser {
 
                                 let amountValue = decodedAmountValue.split(",").find(item => item.endsWith(this.amountDenomination))
                                 if (amountValue) {
-                                    console.log(`>> found amount: ${amountValue}`)
                                     transferOperation = {
                                         amount: this.separateValueAndUnit(amountValue),
                                         receiverAddress: decodedReceiverVaule,
@@ -209,8 +207,6 @@ export class Base64PayloadGenerator implements PayloadParser {
                         let concernedTransferOperation = transferOperations.filter(operation => {
                             return operation.amount.amount !== transactionFee?.amount
                         })
-                        console.log(`${JSON.stringify(transferOperations)}`)
-                        console.log(`found`)
                         return {
                             date: new Date(),
                             blockHeight: blockHeight,

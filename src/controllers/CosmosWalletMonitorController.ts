@@ -68,6 +68,14 @@ export class CosmosWalletMonitorController {
         }
     }
 
+    async forceRestartDueToMessageDrop() {
+        console.log(`found connect status - wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
+        await this.shutdown()
+        console.log("sucessfully shut down")
+        await this.start()
+        console.log("sucessfully restarted")
+    }
+
     async handleTerminationSignal(operation: string) {
         console.log(`received sigterm: ${operation}`)
         if (this.shutdownInProgress) {
@@ -107,12 +115,12 @@ export class CosmosWalletMonitorController {
                 )
                 this.websocket.binaryType = 'arraybuffer'
                 let pingInterval: NodeJS.Timeout | null
+                let messageDropInterval: NodeJS.Timeout | undefined
                 this.websocket.on('open', () => {
                     this.connectionStatus = ConnectionStatus.CONNECTED
                     this.reconnectAttempts = 0
                     console.log("Connected")
                     this.subscribeToEvent()
-
                     pingInterval = setInterval(() => {
                         if (this.websocket?.readyState === WebSocket.OPEN) {
                             this.websocket.ping();
@@ -122,6 +130,15 @@ export class CosmosWalletMonitorController {
                             }
                         }
                     }, 7000)
+                    messageDropInterval = setInterval(async () => {
+                        if (this.lastKnownMessageTimestamp) {
+                            let intervalinMs = (new Date()).getTime() - this.lastKnownMessageTimestamp.getTime()
+                            let toMinutes = Math.floor((intervalinMs / 1000) / 60)
+                            if (toMinutes > 30) {
+                                await this.forceRestartDueToMessageDrop()
+                            }
+                        }
+                    }, 60 * 1000 * 10) // 10 mins
                     resolve()
                 })
                 this.websocket.on('close', async (code, reason) => {
@@ -150,7 +167,7 @@ export class CosmosWalletMonitorController {
                     }
                 })
                 this.websocket.on('error', async (error: Error) => {
-                    console.log(`>>>> WSS error ${error}`)
+                    console.log(`WSS error ${error}`)
                     console.log(error)
                     // if it fails during start up, reject and report
                     if (this.reconnectAttempts === 0) {
