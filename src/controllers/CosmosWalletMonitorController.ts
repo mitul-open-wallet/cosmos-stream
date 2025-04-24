@@ -139,13 +139,13 @@ export class CosmosWalletMonitorController {
                             let intervalinMs = (new Date()).getTime() - this.lastKnownMessageTimestamp.getTime()
                             let toMinutes = (intervalinMs / 1000) / 60
                             console.log(`time elapsed in mins: ${toMinutes} and interval: ${intervalinMs}`)
-                            if (toMinutes > 1 && appConfig.blockchain === Blockchain.INJECTIVE) {
+                            if (toMinutes > 5 && appConfig.blockchain === Blockchain.INJECTIVE) {
                                 await this.sendEmailNotification("restarting service", `${appConfig.blockchain} service will be restarted due to inactivity`)
                                 console.log(`more than ${toMinutes} mins elapsed, restarting the service`)
                                 await this.forceRestartDueToMessageDrop()
                             }
                         }
-                    }, 60 * 1000 * 2) // check every 2 minutes
+                    }, 60 * 1000 * 10) // check every 5 minutes
                     resolve()
                 })
                 this.websocket.on('close', async (code, reason) => {
