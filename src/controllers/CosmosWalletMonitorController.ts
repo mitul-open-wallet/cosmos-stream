@@ -124,7 +124,7 @@ export class CosmosWalletMonitorController {
                     this.reconnectAttempts = 0
                     console.log("Connected")
                     this.subscribeToEvent()
-                    pingInterval = setInterval(() => {
+                    pingInterval = setInterval(async () => {
                         if (this.websocket?.readyState === WebSocket.OPEN) {
                             this.websocket.ping();
                             console.log("sending ping to keep connection alive")
@@ -140,7 +140,7 @@ export class CosmosWalletMonitorController {
                             let toMinutes = (intervalinMs / 1000) / 60
                             console.log(`time elapsed in mins: ${toMinutes} and interval: ${intervalinMs}`)
                             if (toMinutes > 1 && appConfig.blockchain === Blockchain.INJECTIVE) {
-                                await this.sendEmailNotification()
+                                await this.sendEmailNotification("restarting service", `${appConfig.blockchain} service will be restarted due to inactivity`)
                                 console.log(`more than ${toMinutes} mins elapsed, restarting the service`)
                                 await this.forceRestartDueToMessageDrop()
                             }
@@ -333,19 +333,24 @@ export class CosmosWalletMonitorController {
         }
     }
 
-    async sendEmailNotification(
+    private async sendEmailNotification(
         subject: string = 'Notification Cosmos Streams',
         content: string = '<strong>Message from Cosmos streams</strong>'
     ) {
-        try {
-            this.resendClient?.emails.send({
-                from: 'Acme <onboarding@resend.dev>',
-                to: ['mitul.manish@gmail.com'],
-                subject: subject,
-                html: `<strong>${content}</strong>`
-            })
-        } catch (error) {
-            console.error(`error sending email`, error)
+        if (this.resendClient) {
+            try {
+                await this.resendClient?.emails.send({
+                    from: 'Open Wallet <notifications@email-notification.openwallet.finance>',
+                    to: ['mitul.manish@gmail.com'],
+                    subject: subject,
+                    html: `<strong>${content}</strong>`
+                })
+                console.log("Successfully sent email")
+            } catch (error) {
+                console.error(`error sending email`, error)
+            }
+        } else {
+            console.log("issue in initialising Resend client")
         }
     }
 }
