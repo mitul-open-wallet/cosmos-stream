@@ -135,7 +135,7 @@ export class CosmosWalletMonitorController {
                                 await this.forceRestartDueToMessageDrop()
                             }
                         }
-                    }, 60 * 1000 * 10) // check every 5 minutes
+                    }, 60 * 1000 * 10) // check every 10 minutes
                     resolve()
                 })
                 this.websocket.on('close', async (code, reason) => {
