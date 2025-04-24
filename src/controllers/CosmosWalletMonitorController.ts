@@ -135,12 +135,13 @@ export class CosmosWalletMonitorController {
                             console.log("checking restart required due to inactivity")
                             let intervalinMs = (new Date()).getTime() - this.lastKnownMessageTimestamp.getTime()
                             let toMinutes = Math.floor((intervalinMs / 1000) / 60)
-                            if (toMinutes > 3) {
-                                console.log("more than 3 mins elapsed, restarting the service")
+                            console.log(`time elapsed in mins: ${toMinutes}`)
+                            if (toMinutes > 1) {
+                                console.log("more than ${toMinutes} mins elapsed, restarting the service")
                                 await this.forceRestartDueToMessageDrop()
                             }
                         }
-                    }, 60 * 1000 * 3) // 3 mins
+                    }, 60 * 1000 * 1) // check every minute
                     resolve()
                 })
                 this.websocket.on('close', async (code, reason) => {
