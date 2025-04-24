@@ -5,4 +5,5 @@ export interface AppConfig {
     exchangeName: string
     rabbitMqUrl: string
     blockchain: Blockchain
+    resendAPIKey: string
 }

@@ -9,7 +9,8 @@ export const appConfig: AppConfig = (() => {
         port: process.env.PORT ?? "3000",
         exchangeName: process.env.EXCHANGE_NAME ?? "",
         rabbitMqUrl: process.env.RABBIT_MQ_URL ?? "",
-        blockchain: initBlockchain(process.env.BLOCKCHAIN_SLUG ?? "")
+        blockchain: initBlockchain(process.env.BLOCKCHAIN_SLUG ?? ""),
+        resendAPIKey: process.env.RESEND_API_KEY ?? ""
     }
 })()
 
