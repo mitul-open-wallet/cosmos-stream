@@ -3,18 +3,8 @@ import { Blockchain, CosmosHubDataResponse, CosmosResponse, PayloadParser, queue
 import { error } from "console";
 import { GenericPayloadGenerator, Base64PayloadGenerator } from "./PayloadGenerator";
 import { appConfig, wssEndpoint } from "../config";
+import { ConnectionStatus } from "../models/model";
 import { Resend } from "resend";
-
-enum ConnectionStatus {
-    NOT_INITIALISED,
-    CONNECTING,
-    CONNECTED,
-    CLOSING,
-    CLOSED,
-    GIVEN_UP,
-    SYSTEM_ERROR,
-    NEEDS_RESTART
-}
 
 export class CosmosWalletMonitorController {
 
@@ -111,7 +101,7 @@ export class CosmosWalletMonitorController {
         }
         this.cleanupWebSocket()
         this.connectionStatus = ConnectionStatus.CONNECTING
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
                 this.websocket = new WebSocket(
                     this.cosmosHubWebSocketEndpoint
@@ -240,6 +230,7 @@ export class CosmosWalletMonitorController {
             } catch (error) {
                 this.connectionStatus = ConnectionStatus.SYSTEM_ERROR
                 console.error("Error establishing websocket connection", error)
+                await this.sendEmailNotification("Error establishing websocket connection", `${appConfig.blockchain} issue in connecting to the websocket`)
                 reject(error)
             }
         })
@@ -348,6 +339,7 @@ export class CosmosWalletMonitorController {
                 console.log("Successfully sent email")
             } catch (error) {
                 console.error(`error sending email`, error)
+                throw error
             }
         } else {
             console.log("issue in initialising Resend client")

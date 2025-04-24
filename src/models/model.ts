@@ -112,3 +112,14 @@ export function amountDenomination(blockchain: Blockchain): string {
             return ""
     }
 }
+
+export enum ConnectionStatus {
+    NOT_INITIALISED,
+    CONNECTING,
+    CONNECTED,
+    CLOSING,
+    CLOSED,
+    GIVEN_UP,
+    SYSTEM_ERROR,
+    NEEDS_RESTART
+}
