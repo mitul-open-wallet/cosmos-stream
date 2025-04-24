@@ -3,6 +3,7 @@ import { Blockchain, CosmosHubDataResponse, CosmosResponse, PayloadParser, queue
 import { error } from "console";
 import { GenericPayloadGenerator, Base64PayloadGenerator } from "./PayloadGenerator";
 import { appConfig, wssEndpoint } from "../config";
+import { Resend } from "resend";
 
 enum ConnectionStatus {
     NOT_INITIALISED,
@@ -24,12 +25,14 @@ export class CosmosWalletMonitorController {
     private cosmosHubWebSocketEndpoint: string
     private callback: CosmosHubDataResponse
     private lastKnownMessageTimestamp: Date | undefined
+    private resendClient: Resend | undefined
 
     private reconnectAttempts = 0
     private shutdownInProgress = false
 
     constructor(callback: CosmosHubDataResponse) {
         this.cosmosHubWebSocketEndpoint = wssEndpoint(appConfig.blockchain)
+        this.resendClient = new Resend(appConfig.resendAPIKey)
         console.log(this.cosmosHubWebSocketEndpoint)
         this.callback = callback
         this.setupSignalHandlers()
@@ -137,6 +140,7 @@ export class CosmosWalletMonitorController {
                             let toMinutes = (intervalinMs / 1000) / 60
                             console.log(`time elapsed in mins: ${toMinutes} and interval: ${intervalinMs}`)
                             if (toMinutes > 1) {
+                                await this.sendEmailNotification()
                                 console.log("more than ${toMinutes} mins elapsed, restarting the service")
                                 await this.forceRestartDueToMessageDrop()
                             }
@@ -326,6 +330,22 @@ export class CosmosWalletMonitorController {
                 return new GenericPayloadGenerator()
             default:
                 return new GenericPayloadGenerator()
+        }
+    }
+
+    async sendEmailNotification(
+        subject: string = 'Notification Cosmos Streams',
+        content: string = '<strong>Message from Cosmos streams</strong>'
+    ) {
+        try {
+            this.resendClient?.emails.send({
+                from: 'Acme <onboarding@resend.dev>',
+                to: ['mitul.manish@gmail.com'],
+                subject: subject,
+                html: `<strong>${content}</strong>`
+            })
+        } catch (error) {
+            console.error(`error sending email`, error)
         }
     }
 }
