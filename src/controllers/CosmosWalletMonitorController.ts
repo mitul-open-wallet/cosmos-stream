@@ -260,7 +260,9 @@ export class CosmosWalletMonitorController {
           this.websocket.removeAllListeners('close');
           this.websocket.removeAllListeners('error');
           this.websocket.removeAllListeners('message');
-          this.websocket.close();
+          if (this.websocket.readyState !== WebSocket.CLOSED && this.websocket.readyState !== WebSocket.CLOSING) {
+            this.websocket.close();
+          }
         }
       }
 
