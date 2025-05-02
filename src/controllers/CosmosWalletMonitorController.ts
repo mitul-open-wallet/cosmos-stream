@@ -1,4 +1,4 @@
-import WebSocket from "ws";
+import WebSocket, { CLOSED } from "ws";
 import { Blockchain, CosmosHubDataResponse, CosmosResponse, PayloadParser, queuePayloadDummy } from "../models/model";
 import { error } from "console";
 import { GenericPayloadGenerator, Base64PayloadGenerator } from "./PayloadGenerator";
@@ -260,9 +260,7 @@ export class CosmosWalletMonitorController {
           this.websocket.removeAllListeners('close');
           this.websocket.removeAllListeners('error');
           this.websocket.removeAllListeners('message');
-          if (this.websocket.readyState !== WebSocket.CLOSED && this.websocket.readyState !== WebSocket.CLOSING) {
-            this.websocket.close();
-          }
+          this.websocket.close();
         }
       }
 
@@ -273,7 +271,7 @@ export class CosmosWalletMonitorController {
                 resolve()
                 return
             }
-            if (this.websocket.readyState === 3) {
+            if (this.websocket.readyState === CLOSED) {
                 resolve()
                 return
             }
@@ -297,7 +295,7 @@ export class CosmosWalletMonitorController {
         }
         this.cleanupWebSocket()
         try {
-            await this.observeWebSocketClosingProcess(25000)
+            await this.observeWebSocketClosingProcess(10000)
             this.connectionStatus = ConnectionStatus.CLOSED
             this.websocket = undefined
         } catch {
