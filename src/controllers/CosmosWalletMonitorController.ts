@@ -255,12 +255,11 @@ export class CosmosWalletMonitorController {
 
     private cleanupWebSocket(): void {
         if (this.websocket) {
-          // Remove all listeners
-          this.websocket.removeAllListeners('open');
-          this.websocket.removeAllListeners('close');
-          this.websocket.removeAllListeners('error');
-          this.websocket.removeAllListeners('message');
-          this.websocket.close();
+          ['open', 'close', 'error', 'message'].forEach(item => this.websocket?.removeAllListeners(item))
+          if (this.websocket.readyState === WebSocket.OPEN || this.websocket.readyState === WebSocket.CONNECTING) {
+            this.websocket.close();
+          }
+          this.websocket = undefined
         }
       }
 
