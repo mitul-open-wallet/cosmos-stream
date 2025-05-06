@@ -63,10 +63,29 @@ export class CosmosWalletMonitorController {
 
     async forceRestartDueToMessageDrop() {
         console.log(`found connect status - wss state: ${this.websocket?.readyState} connection status: ${this.connectionStatus}`)
-        await this.shutdown()
-        console.log("sucessfully shut down")
-        await this.start()
-        console.log("sucessfully restarted")
+        try {
+            await this.shutdown()
+            console.log("sucessfully shut down")
+        } catch (error) {
+            await this.sendNotificationDuringError("shutdown", error)
+            throw error
+        }
+        
+        try {
+            await this.start()
+            console.log("sucessfully restarted")
+        } catch (error) {
+            await this.sendNotificationDuringError("restart", error)
+            throw error
+        }
+    }
+
+    private async sendNotificationDuringError(subject: string, error: unknown) {
+        if (error instanceof Error) {
+            await this.sendEmailNotification(`error during forced ${subject}`, `${error.message}`)
+        } else {
+            await this.sendEmailNotification(`error during forced ${subject}`, "")
+        }
     }
 
     async handleTerminationSignal(operation: string) {
