@@ -85,6 +85,8 @@ export interface PayloadParser {
     handleResponse(response: CosmosResponse): QueuePayload
 }
 
+// TODO:- Add support for EVMOS
+
 export enum Blockchain {
     COSMOS_HUB = "cosmos_hub",
     INJECTIVE = "injective",

@@ -126,7 +126,7 @@ export class CosmosWalletMonitorController {
                     this.cosmosHubWebSocketEndpoint
                 )
                 this.websocket.binaryType = 'arraybuffer'
-                let pingInterval: NodeJS.Timeout | null
+                let pingInterval: NodeJS.Timeout | undefined
                 let messageDropInterval: NodeJS.Timeout | undefined
                 this.websocket.on('open', () => {
                     this.connectionStatus = ConnectionStatus.CONNECTED
@@ -162,7 +162,11 @@ export class CosmosWalletMonitorController {
                     this.connectionStatus = ConnectionStatus.CLOSED
                     if (pingInterval) {
                         clearInterval(pingInterval)
-                        pingInterval = null
+                        pingInterval = undefined
+                    }
+                    if (messageDropInterval) {
+                        clearInterval(messageDropInterval)
+                        messageDropInterval = undefined
                     }
 
                     console.log("timeout, hence reconnecting")
@@ -182,75 +186,88 @@ export class CosmosWalletMonitorController {
                         }
                     }
                 })
-                this.websocket.on('error', async (error: Error) => {
-                    console.log(`WSS error ${error}`)
-                    console.log(error)
-                    // if it fails during start up, reject and report
-                    if (this.reconnectAttempts === 0) {
-                        this.connectionStatus = ConnectionStatus.CLOSED
-                        reject(error)
-                    } else {
-                        this.connectionStatus = ConnectionStatus.NEEDS_RESTART
-                        try {
-                            await this.restartIfRequired()
-                            resolve()
-                        } catch (error) {
-                            console.log(`error during restart`, error)
-                            setTimeout(async () => {
-                                try {
-                                    await this.restartIfRequired()
-                                    resolve()
-                                } catch (error) {
-                                    console.log(`error during restart thrown from catch block, needs to be investigated`, error)
-                                    reject(error)
-                                }
-                            }, 15000)
-                        }
-                    }
+
+                this.errorHandler(() => {
+                    resolve()
+                }, (error) => {
+                    reject(error)
                 })
-                this.websocket.on('message', (data: WebSocket.Data) => {
-                    try {
-                        let responseString: string = ""
-                        // Handle different data types appropriately
-                        if (data instanceof ArrayBuffer) {
-                            // Convert ArrayBuffer to string using TextDecoder
-                            responseString = new TextDecoder('utf-8').decode(data);
-                        } else if (Buffer.isBuffer(data)) {
-                            // Handle Node.js Buffer
-                            responseString = data.toString('utf-8');
-                        } else {
-                            // Already a string
-                            responseString = data.toString();
-                        }
-                        let response: CosmosResponse = JSON.parse(responseString)
-                        this.payloadGenerator = this.payloadParser()
-                        let payload = this.payloadGenerator.handleResponse(response)
-                        if (payload !== undefined && payload !== queuePayloadDummy) {
-                            this.lastKnownMessageTimestamp = new Date()
-                            this.callback(payload)
-                        } else {
-                            if (this.websocket?.readyState === WebSocket.OPEN) {
-                                try {
-                                    const errorMessage = { type: 'ERROR', message: "error.message" }
-                                    this.websocket.send(JSON.stringify(errorMessage))
-                                } catch (e) {
-                                    console.error("Failed to send error response", e)
-                                }
-                            }
-                        }
-                    } catch (error) {
-                        if (error instanceof SyntaxError) {
-                            console.error(`Wrong syntax`, error)
-                        } else {
-                            console.log("Unexpected error during parsing data")
-                        }
-                    }
-                })
+                this.messageHandler()
             } catch (error) {
                 this.connectionStatus = ConnectionStatus.SYSTEM_ERROR
                 console.error("Error establishing websocket connection", error)
                 await this.sendEmailNotification("Error establishing websocket connection", `${appConfig.blockchain} issue in connecting to the websocket`)
                 reject(error)
+            }
+        })
+    }
+
+    private errorHandler(resolve: () => void, reject: (arg0: Error) => void) {
+        this.websocket?.on('error', async (error: Error) => {
+            console.log(`WSS error ${error}`)
+            console.log(error)
+            // if it fails during start up, reject and report
+            if (this.reconnectAttempts === 0) {
+                this.connectionStatus = ConnectionStatus.CLOSED
+                reject(error)
+            } else {
+                this.connectionStatus = ConnectionStatus.NEEDS_RESTART
+                try {
+                    await this.restartIfRequired()
+                    resolve()
+                } catch (error) {
+                    console.log(`error during restart`, error)
+                    setTimeout(async () => {
+                        try {
+                            await this.restartIfRequired()
+                            resolve()
+                        } catch (error) {
+                            console.log(`error during restart thrown from catch block, needs to be investigated`, error)
+                            reject(error as Error)
+                        }
+                    }, 15000)
+                }
+            }
+        })
+    }
+
+    private messageHandler() {
+        this.websocket?.on('message', (data: WebSocket.Data) => {
+            try {
+                let responseString: string = ""
+                // Handle different data types appropriately
+                if (data instanceof ArrayBuffer) {
+                    // Convert ArrayBuffer to string using TextDecoder
+                    responseString = new TextDecoder('utf-8').decode(data);
+                } else if (Buffer.isBuffer(data)) {
+                    // Handle Node.js Buffer
+                    responseString = data.toString('utf-8');
+                } else {
+                    // Already a string
+                    responseString = data.toString();
+                }
+                let response: CosmosResponse = JSON.parse(responseString)
+                this.payloadGenerator = this.payloadParser()
+                let payload = this.payloadGenerator.handleResponse(response)
+                if (payload !== undefined && payload !== queuePayloadDummy) {
+                    this.lastKnownMessageTimestamp = new Date()
+                    this.callback(payload)
+                } else {
+                    if (this.websocket?.readyState === WebSocket.OPEN) {
+                        try {
+                            const errorMessage = { type: 'ERROR', message: "error.message" }
+                            this.websocket.send(JSON.stringify(errorMessage))
+                        } catch (e) {
+                            console.error("Failed to send error response", e)
+                        }
+                    }
+                }
+            } catch (error) {
+                if (error instanceof SyntaxError) {
+                    console.error(`Wrong syntax`, error)
+                } else {
+                    console.log("Unexpected error during parsing data")
+                }
             }
         })
     }
