@@ -35,7 +35,7 @@ export function wssEndpoint(blockchain: Blockchain): string {
         case Blockchain.COSMOS_HUB:
              return "wss://atom.nownodes.io/wss/7a9449f4-dc1e-40ca-be00-72935bf0fd49"
         case Blockchain.INJECTIVE:
-            return "wss://sentry.tm.injective.network:443/websocket"//"wss://inj.nownodes.io/wss/7a9449f4-dc1e-40ca-be00-72935bf0fd49"
+            return "wss://inj.nownodes.io/wss/7a9449f4-dc1e-40ca-be00-72935bf0fd49"
         case Blockchain.osmosis:
             return "wss://osmo.nownodes.io/wss/7a9449f4-dc1e-40ca-be00-72935bf0fd49"
         default:

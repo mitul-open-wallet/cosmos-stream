@@ -94,7 +94,6 @@ export class GenericPayloadGenerator implements PayloadParser {
                     }
                 } else {
                     return queuePayloadDummy
-
                 }
             }
         }
