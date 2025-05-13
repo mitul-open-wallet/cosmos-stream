@@ -6,6 +6,21 @@ import { appConfig, wssEndpoint } from "../config";
 import { ConnectionStatus } from "../models/model";
 import { Resend } from "resend";
 
+class RestartTimeStamp {
+    private previous: Date | undefined
+    private latest: Date | undefined
+
+    setDate(date: Date) {
+        this.previous = this.latest
+        this.latest = date
+    }
+
+    prettyPrint() {
+        const delta = (this.latest?.getTime() ?? 0) - (this.previous?.getTime() ?? 0)
+        console.log(`time difference between restart ${delta} \n latest: ${this.latest} previous: ${this.previous}`)
+    }
+}
+
 export class CosmosWalletMonitorController {
 
     private websocket: WebSocket | undefined = undefined;
@@ -16,6 +31,7 @@ export class CosmosWalletMonitorController {
     private callback: CosmosHubDataResponse
     private lastKnownMessageTimestamp: Date | undefined
     private resendClient: Resend | undefined
+    private restartTimestamp = new RestartTimeStamp()
 
     private reconnectAttempts = 0
     private shutdownInProgress = false
@@ -73,6 +89,7 @@ export class CosmosWalletMonitorController {
         
         try {
             await this.start()
+            this.restartTimestamp.setDate(new Date())
             console.log("sucessfully restarted")
         } catch (error) {
             await this.sendNotificationDuringError("restart", error)
@@ -140,6 +157,7 @@ export class CosmosWalletMonitorController {
                             if (this.lastKnownMessageTimestamp) {
                                 console.log(`Last known message at: ${this.lastKnownMessageTimestamp}`)
                             }
+                            console.log(`Last known restart time: ${this.restartTimestamp.prettyPrint()}`)
                         }
                     }, 7000)
                     messageDropInterval = setInterval(async () => {
