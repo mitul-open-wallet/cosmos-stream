@@ -15,12 +15,20 @@ export class GenericPayloadGenerator implements PayloadParser {
             const txResult = result.data?.value.TxResult
             let transactionHash = [""]
             let topLevelEvents = result.events
+
+            // temporary for debug purposes
+            if (topLevelEvents) {
+                transactionHash = topLevelEvents['tx.hash']
+                if (transactionHash.length !== 0) {
+                    console.log(`tx hash: ${transactionHash[0]}`)
+                }
+            }
+            
             if (txResult && topLevelEvents) {
                 const action = topLevelEvents["message.action"]
                 if (action && action.length !== 0 && action[0] === "/cosmos.bank.v1beta1.MsgSend") {
                     const blockHeight = txResult.height
                     const events = txResult.result.events
-                    transactionHash = topLevelEvents['tx.hash']
 
                     let feePayEvents = events.filter(event => {
                         return event.type === "fee_pay"
