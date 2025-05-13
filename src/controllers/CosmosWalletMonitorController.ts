@@ -17,7 +17,7 @@ class RestartTimeStamp {
 
     prettyPrint() {
         const delta = (this.latest?.getTime() ?? 0) - (this.previous?.getTime() ?? 0)
-        console.log(`time difference between restart ${delta} \n latest: ${this.latest} previous: ${this.previous}`)
+        console.log(`time difference between restart ${delta}\nlatest: ${this.latest} previous: ${this.previous}`)
     }
 }
 
@@ -154,9 +154,6 @@ export class CosmosWalletMonitorController {
                         if (this.websocket?.readyState === WebSocket.OPEN) {
                             this.websocket.ping();
                             console.log("sending ping to keep connection alive")
-                            if (this.lastKnownMessageTimestamp) {
-                                console.log(`Last known message at: ${this.lastKnownMessageTimestamp}`)
-                            }
                             console.log(`Last known restart time: ${this.restartTimestamp.prettyPrint()}`)
                         }
                     }, 7000)
@@ -269,6 +266,7 @@ export class CosmosWalletMonitorController {
                 let payload = this.payloadGenerator.handleResponse(response)
                 if (payload !== undefined && payload !== queuePayloadDummy) {
                     this.lastKnownMessageTimestamp = new Date()
+                    console.log(`message queued at ${this.lastKnownMessageTimestamp}`)
                     this.callback(payload)
                 } else {
                     if (this.websocket?.readyState === WebSocket.OPEN) {
