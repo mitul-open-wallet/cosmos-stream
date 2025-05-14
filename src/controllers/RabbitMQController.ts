@@ -24,9 +24,9 @@ export class RabbitMQController {
         try {   
             this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl, connectionOptions)
             this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
-            await this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
-            await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
-            this.consumeDataFromPayloadQueue()
+            this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
+            this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
+            //this.consumeDataFromPayloadQueue()
         } catch (error) {
             console.error("rabbitmq connection error", {
                 errorName: error, 
@@ -64,7 +64,7 @@ export class RabbitMQController {
 
     consumeDataFromPayloadQueue() {
         this.rabbitMqChannel?.consume(
-            this.websocketDataProcessingQueue,
+            "web-socket-processing-queue", //this.websocketDataProcessingQueue,
             (message) => {
                 if (message) {
                     let response: CosmosResponse = JSON.parse(message.content.toString())

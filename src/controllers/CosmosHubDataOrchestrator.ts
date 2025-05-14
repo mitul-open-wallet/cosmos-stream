@@ -33,7 +33,8 @@ export class CosmosHubDataOrchestrator {
                     console.error("caught an error while adding message to the exchange", error)
                 }
             }, (rawPayload) => {
-                this.rabbitMQController.addWebsocketPayloadToQueue(rawPayload)
+                const queued = this.rabbitMQController.addWebsocketPayloadToQueue(rawPayload)
+                console.log(`queued successfully: ${queued}`)
             })
             await this.rabbitMQController.setupRabbitMq();
             await this.cosmosWalletMonitorController.bootstrap();
