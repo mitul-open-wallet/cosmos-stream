@@ -80,6 +80,7 @@ export interface QueuePayload {
 }
 
 export type CosmosHubDataResponse = (payload: QueuePayload) => void
+export type CosmosHubPayloadResponse = (payload: string) => void
 
 export interface PayloadParser {
     handleResponse(response: CosmosResponse): QueuePayload

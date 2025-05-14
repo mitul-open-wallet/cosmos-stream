@@ -32,6 +32,8 @@ export class CosmosHubDataOrchestrator {
                 } catch (error) {
                     console.error("caught an error while adding message to the exchange", error)
                 }
+            }, (rawPayload) => {
+                this.rabbitMQController.addWebsocketPayloadToQueue(rawPayload)
             })
             await this.rabbitMQController.setupRabbitMq();
             await this.cosmosWalletMonitorController.bootstrap();

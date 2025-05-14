@@ -1,5 +1,5 @@
 import WebSocket, { CLOSED } from "ws";
-import { Blockchain, CosmosHubDataResponse, CosmosResponse, PayloadParser, queuePayloadDummy } from "../models/model";
+import { Blockchain, CosmosHubDataResponse, CosmosHubPayloadResponse, CosmosResponse, PayloadParser, queuePayloadDummy } from "../models/model";
 import { error } from "console";
 import { GenericPayloadGenerator, Base64PayloadGenerator } from "./PayloadGenerator";
 import { appConfig, wssEndpoint } from "../config";
@@ -29,6 +29,7 @@ export class CosmosWalletMonitorController {
     private connectionStatus: ConnectionStatus = ConnectionStatus.NOT_INITIALISED
     private cosmosHubWebSocketEndpoint: string
     private callback: CosmosHubDataResponse
+    private rawPayload: CosmosHubPayloadResponse
     private lastKnownMessageTimestamp: Date | undefined
     private resendClient: Resend | undefined
     private restartTimestamp = new RestartTimeStamp()
@@ -36,11 +37,12 @@ export class CosmosWalletMonitorController {
     private reconnectAttempts = 0
     private shutdownInProgress = false
 
-    constructor(callback: CosmosHubDataResponse) {
+    constructor(callback: CosmosHubDataResponse, rawPayload: CosmosHubPayloadResponse) {
         this.cosmosHubWebSocketEndpoint = wssEndpoint(appConfig.blockchain)
         this.resendClient = new Resend(appConfig.resendAPIKey)
         console.log(this.cosmosHubWebSocketEndpoint)
         this.callback = callback
+        this.rawPayload = rawPayload
         this.setupSignalHandlers()
     }
 
@@ -261,23 +263,28 @@ export class CosmosWalletMonitorController {
                     // Already a string
                     responseString = data.toString();
                 }
-                let response: CosmosResponse = JSON.parse(responseString)
-                this.payloadGenerator = this.payloadParser()
-                let payload = this.payloadGenerator.handleResponse(response)
-                if (payload !== undefined && payload !== queuePayloadDummy) {
-                    this.lastKnownMessageTimestamp = new Date()
-                    console.log(`message queued at ${this.lastKnownMessageTimestamp}`)
-                    this.callback(payload)
-                } else {
-                    if (this.websocket?.readyState === WebSocket.OPEN) {
-                        try {
-                            const errorMessage = { type: 'ERROR', message: "error.message" }
-                            this.websocket.send(JSON.stringify(errorMessage))
-                        } catch (e) {
-                            console.error("Failed to send error response", e)
-                        }
-                    }
-                }
+
+                // put the data in a queue
+                // and process it one by one
+                this.rawPayload(responseString)
+
+                // read the data from the consumer 
+                // let response: CosmosResponse = JSON.parse(responseString)
+                // this.payloadGenerator = this.payloadParser()
+                // let payload = this.payloadGenerator.handleResponse(response)
+                // if (payload !== undefined && payload !== queuePayloadDummy) {
+                //     this.lastKnownMessageTimestamp = new Date()
+                //     this.callback(payload)
+                // } else {
+                //     if (this.websocket?.readyState === WebSocket.OPEN) {
+                //         try {
+                //             const errorMessage = { type: 'ERROR', message: "error.message" }
+                //             this.websocket.send(JSON.stringify(errorMessage))
+                //         } catch (e) {
+                //             console.error("Failed to send error response", e)
+                //         }
+                //     }
+                // }
             } catch (error) {
                 if (error instanceof SyntaxError) {
                     console.error(`Wrong syntax`, error)
@@ -399,3 +406,91 @@ export class CosmosWalletMonitorController {
 }
 
 
+/*
+import amqp from 'amqplib';
+
+interface CosmosResponse {
+  // Define your response structure here
+  id?: string;
+  result?: any;
+  // other fields...
+}
+
+private async messageHandler() {
+  // RabbitMQ connection
+  const connection = await amqp.connect('amqp://localhost'); // Change to your RabbitMQ server
+  const channel = await connection.createChannel();
+  
+  // Define your queue
+  const queueName = 'injective_transactions';
+  await channel.assertQueue(queueName, { durable: true });
+  
+  this.websocket?.on('message', async (data: WebSocket.Data) => {
+    try {
+      let responseString: string = "";
+      
+      // Handle different data types appropriately
+      if (data instanceof ArrayBuffer) {
+        // Convert ArrayBuffer to string using TextDecoder
+        responseString = new TextDecoder('utf-8').decode(data);
+      } else if (Buffer.isBuffer(data)) {
+        // Handle Node.js Buffer
+        responseString = data.toString('utf-8');
+      } else {
+        // Already a string
+        responseString = data.toString();
+      }
+
+      // Parse the message
+      const response: CosmosResponse = JSON.parse(responseString);
+      
+      // Send to RabbitMQ queue
+      await channel.sendToQueue(
+        queueName, 
+        Buffer.from(JSON.stringify(response)),
+        { persistent: true }
+      );
+      
+      console.log(`[x] Sent message to queue: ${response.id || 'unknown'}`);
+    } catch (error) {
+      console.error('Error processing message:', error);
+    }
+  });
+  
+  // Setup a consumer in the same service or another service
+  this.setupConsumer(channel, queueName);
+}
+
+private async setupConsumer(channel: amqp.Channel, queueName: string) {
+  // Process messages from the queue
+  await channel.consume(queueName, async (msg) => {
+    if (msg) {
+      try {
+        const response: CosmosResponse = JSON.parse(msg.content.toString());
+        
+        // Process the payload
+        await this.processPayload(response);
+        
+        // Acknowledge the message was processed
+        channel.ack(msg);
+      } catch (error) {
+        console.error('Error consuming message:', error);
+        // Nack and requeue for retry or handle error differently
+        channel.nack(msg, false, true);
+      }
+    }
+  });
+}
+
+private async processPayload(response: CosmosResponse) {
+  // Implement your payload processing logic here
+  // This could involve updating a database, triggering other services, etc.
+  console.log(`Processing payload: ${response.id}`);
+  
+  // Your existing payload parsing logic
+  // this.payloadGenerator = this.payloadParser()
+  
+  // Process transaction data
+  // ...
+}
+*/

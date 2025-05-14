@@ -61,3 +61,26 @@ export function rabbitmqRoutingKey(blockchain: Blockchain): string {
             return ""
     }
 }
+
+export function payloadProcessingQueueName(blockchain: Blockchain): string {
+    const suffix = "_processing_queue"
+    function queueName(name: string) {
+        return name + suffix
+    }
+    switch (blockchain) {
+        case Blockchain.AKASH:
+            return queueName("akash")
+        case Blockchain.AXELAR:
+            return queueName("axelar")
+        case Blockchain.CELESTIA:
+            return queueName("celestia")
+        case Blockchain.COSMOS_HUB:
+            return queueName("cosmos_hub")
+        case Blockchain.INJECTIVE:
+            return queueName("injective")
+        case Blockchain.osmosis:
+            return queueName("osmosis")
+        default:
+            return ""
+    }
+}
