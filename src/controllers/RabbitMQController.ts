@@ -12,6 +12,11 @@ const connectionOptions: Options.Connect = {
 export class RabbitMQController {
     private rabbitMqChannel: amqp.Channel | undefined = undefined
     private rabbitMqConnection: amqp.Connection | undefined = undefined
+
+    //consumer
+    private rabbitMqConsumerChannel: amqp.Channel | undefined = undefined
+    private rabbitMqConsumerConnection: amqp.Connection | undefined = undefined
+
     private routingKey: string
     private websocketDataProcessingQueue: string
 
@@ -24,7 +29,12 @@ export class RabbitMQController {
         try {   
             this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl, connectionOptions)
             this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
-            await this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
+
+            // consumer
+            // this.rabbitMqConsumerConnection = await amqp.connect(appConfig.rabbitMQConsumerUrl, connectionOptions)
+            // this.rabbitMqConsumerChannel = await this.rabbitMqConsumerConnection.createChannel()
+            // await this.rabbitMqConsumerChannel.assertExchange(appConfig.exchangeName, 'direct')
+
             await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
             this.consumeDataFromPayloadQueue()
         } catch (error) {
@@ -37,8 +47,8 @@ export class RabbitMQController {
     }
 
     addMessageToChannel(payload: QueuePayload) {
-        if (this.rabbitMqChannel) {
-            let buffered = this.rabbitMqChannel.publish(
+        if (this.rabbitMqConsumerChannel) {
+            let buffered = this.rabbitMqConsumerChannel.publish(
                 appConfig.exchangeName,
                 this.routingKey,
                 Buffer.from(JSON.stringify(payload)),
@@ -68,6 +78,7 @@ export class RabbitMQController {
             (message) => {
                 if (message) {
                     let response: CosmosResponse = JSON.parse(message.content.toString())
+                    this.rabbitMqChannel?.ack(message)
                     console.log("consumed message from queue")
                     const payloadParser = this.payloadParser()
                     const payload = payloadParser.handleResponse(response)
