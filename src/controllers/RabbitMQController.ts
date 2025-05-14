@@ -1,9 +1,14 @@
-import amqp from 'amqplib';
+import amqp, { Options } from 'amqplib';
 import { appConfig, payloadProcessingQueueName, rabbitmqRoutingKey } from "../config";
 import { Blockchain, CosmosResponse, PayloadParser, QueuePayload, queuePayloadDummy } from '../models/model';
 import { error } from 'console';
 import { Base64PayloadGenerator, GenericPayloadGenerator } from './PayloadGenerator';
 
+const connectionOptions: Options.Connect = {
+    frameMax: 8192,  // Explicitly set to the minimum required value
+    heartbeat: 60
+  };
+  
 export class RabbitMQController {
     private rabbitMqChannel: amqp.Channel | undefined = undefined
     private rabbitMqConnection: amqp.Connection | undefined = undefined
@@ -17,11 +22,10 @@ export class RabbitMQController {
 
     async setupRabbitMq(): Promise<void> {
         try {   
-            
-            this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl)
+            this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl, connectionOptions)
             this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
-            this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
-            this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
+            await this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
+            await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
             this.consumeDataFromPayloadQueue()
         } catch (error) {
             console.error("rabbitmq connection error", {
@@ -61,7 +65,7 @@ export class RabbitMQController {
     consumeDataFromPayloadQueue() {
         this.rabbitMqChannel?.consume(
             this.websocketDataProcessingQueue,
-            async (message) => {
+            (message) => {
                 if (message) {
                     let response: CosmosResponse = JSON.parse(message.content.toString())
                     console.log("consumed message from queue")
