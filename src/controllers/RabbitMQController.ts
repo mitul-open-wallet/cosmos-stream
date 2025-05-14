@@ -71,7 +71,9 @@ export class RabbitMQController {
                     console.log("consumed message from queue")
                     const payloadParser = this.payloadParser()
                     const payload = payloadParser.handleResponse(response)
+                    console.log(payload)
                     if (payload !== undefined && payload !== queuePayloadDummy) {
+                        console.log("adding message to channel")
                         this.addMessageToChannel(payload)
                     }
                 }
