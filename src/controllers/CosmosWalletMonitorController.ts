@@ -152,26 +152,26 @@ export class CosmosWalletMonitorController {
                     this.reconnectAttempts = 0
                     console.log("Connected")
                     this.subscribeToEvent()
-                    pingInterval = setInterval(async () => {
-                        if (this.websocket?.readyState === WebSocket.OPEN) {
-                            this.websocket.ping();
-                            console.log("sending ping to keep connection alive")
-                            console.log(`Last known restart time: ${this.restartTimestamp.prettyPrint()}`)
-                        }
-                    }, 7000)
-                    messageDropInterval = setInterval(async () => {
-                        if (this.lastKnownMessageTimestamp) {
-                            console.log("checking restart required due to inactivity")
-                            let intervalinMs = (new Date()).getTime() - this.lastKnownMessageTimestamp.getTime()
-                            let toMinutes = (intervalinMs / 1000) / 60
-                            console.log(`time elapsed in mins: ${toMinutes} and interval: ${intervalinMs}`)
-                            if (toMinutes > 3 && appConfig.blockchain === Blockchain.INJECTIVE) {
-                                await this.sendEmailNotification("restarting service", `${appConfig.blockchain} service will be restarted due to inactivity`)
-                                console.log(`more than ${toMinutes} mins elapsed, restarting the service`)
-                                await this.forceRestartDueToMessageDrop()
-                            }
-                        }
-                    }, 60 * 1000 * 5) // check every 5 minutes
+                    // pingInterval = setInterval(async () => {
+                    //     if (this.websocket?.readyState === WebSocket.OPEN) {
+                    //         this.websocket.ping();
+                    //         console.log("sending ping to keep connection alive")
+                    //         console.log(`Last known restart time: ${this.restartTimestamp.prettyPrint()}`)
+                    //     }
+                    // }, 7000)
+                    // messageDropInterval = setInterval(async () => {
+                    //     if (this.lastKnownMessageTimestamp) {
+                    //         console.log("checking restart required due to inactivity")
+                    //         let intervalinMs = (new Date()).getTime() - this.lastKnownMessageTimestamp.getTime()
+                    //         let toMinutes = (intervalinMs / 1000) / 60
+                    //         console.log(`time elapsed in mins: ${toMinutes} and interval: ${intervalinMs}`)
+                    //         if (toMinutes > 3 && appConfig.blockchain === Blockchain.INJECTIVE) {
+                    //             await this.sendEmailNotification("restarting service", `${appConfig.blockchain} service will be restarted due to inactivity`)
+                    //             console.log(`more than ${toMinutes} mins elapsed, restarting the service`)
+                    //             await this.forceRestartDueToMessageDrop()
+                    //         }
+                    //     }
+                    // }, 60 * 1000 * 5) // check every 5 minutes
                     resolve()
                 })
                 this.websocket.on('close', async (code, reason) => {
