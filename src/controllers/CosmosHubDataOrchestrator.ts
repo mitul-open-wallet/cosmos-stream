@@ -11,16 +11,16 @@ export class CosmosHubDataOrchestrator {
     async bootstrap() {
         await this.start()
         let oneMinute = 60000
-        setTimeout(() => {
-            setInterval(async () => {
-                console.log("checking if restart is required")
-                try {
-                    await this.cosmosWalletMonitorController?.restartIfRequired()
-                } catch (error) {
-                    console.error("did not get an opportunity to restart")
-                }
-            }, oneMinute * 2)
-        }, oneMinute * 2)
+        // setTimeout(() => {
+        //     setInterval(async () => {
+        //         console.log("checking if restart is required")
+        //         try {
+        //             await this.cosmosWalletMonitorController?.restartIfRequired()
+        //         } catch (error) {
+        //             console.error("did not get an opportunity to restart")
+        //         }
+        //     }, oneMinute * 2)
+        // }, oneMinute * 2)
     }
 
     private async start() {
