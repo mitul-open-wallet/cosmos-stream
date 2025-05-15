@@ -32,8 +32,8 @@ export class CosmosHubDataOrchestrator {
                 } catch (error) {
                     console.error("caught an error while adding message to the exchange", error)
                 }
-            }, (rawPayload) => {
-                const queued = this.rabbitMQController.addWebsocketPayloadToQueue(rawPayload)
+            }, async (rawPayload) => {
+                const queued = await this.rabbitMQController.addWebsocketPayloadToQueue(rawPayload)
                 console.log(`queued successfully: ${queued}`)
             })
             await this.rabbitMQController.setupRabbitMq();

@@ -29,15 +29,15 @@ export class RabbitMQController {
             this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
 
             // consumer
-            this.rabbitMqConsumerConnection = await amqp.connect(appConfig.rabbitMQConsumerUrl, {
-                frameMax: 131072,
-                heartbeat: 60
-            })
-            this.rabbitMqConsumerChannel = await this.rabbitMqConsumerConnection.createChannel()
-            await this.rabbitMqConsumerChannel.assertExchange(appConfig.exchangeName, 'direct')
+            // this.rabbitMqConsumerConnection = await amqp.connect(appConfig.rabbitMQConsumerUrl, {
+            //     frameMax: 131072,
+            //     heartbeat: 60
+            // })
+            // this.rabbitMqConsumerChannel = await this.rabbitMqConsumerConnection.createChannel()
+            await this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
 
-            await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
-            this.consumeDataFromPayloadQueue()
+            // await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
+            // this.consumeDataFromPayloadQueue()
         } catch (error) {
             console.error("rabbitmq connection error", {
                 errorName: error, 
@@ -48,8 +48,8 @@ export class RabbitMQController {
     }
 
     addMessageToChannel(payload: QueuePayload) {
-        if (this.rabbitMqConsumerChannel) {
-            let buffered = this.rabbitMqConsumerChannel.publish(
+        if (this.rabbitMqChannel) {
+            let buffered = this.rabbitMqChannel.publish(
                 appConfig.exchangeName,
                 this.routingKey,
                 Buffer.from(JSON.stringify(payload)),
@@ -59,23 +59,37 @@ export class RabbitMQController {
                 }
             )
             console.log(`buffered to channel: ${buffered}`)
+            return buffered
         } else {
             console.log("no channel found")
+            return false
         }
     }
 
-    addWebsocketPayloadToQueue(payload: string) {
-        try {
-            const queued = this.rabbitMqChannel?.sendToQueue(
-                this.websocketDataProcessingQueue,
-                Buffer.from(payload),
-                { persistent: false }
-            )
+    async addWebsocketPayloadToQueue(payload: string) {
+        // try {
+        //     const queued = this.rabbitMqChannel?.sendToQueue(
+        //         this.websocketDataProcessingQueue,
+        //         Buffer.from(payload),
+        //         { persistent: false }
+        //     )
+        //     return queued
+        // } catch (error) {
+        //     console.error("falied while adding message to the queue", error)
+        //     return false
+        // }
+        
+        let response: CosmosResponse = JSON.parse(payload)
+        const payloadParser = this.payloadParser()
+        const queuePayload = payloadParser.handleResponse(response)
+        console.log(queuePayload)
+        if (payload !== undefined && queuePayload !== queuePayloadDummy) {
+            console.log("adding message to channel")
+            let queued = this.addMessageToChannel(queuePayload)
             return queued
-        } catch (error) {
-            console.error("falied while adding message to the queue", error)
-            return false
         }
+        console.log("no payload")
+        return false
     }
 
     consumeDataFromPayloadQueue() {
