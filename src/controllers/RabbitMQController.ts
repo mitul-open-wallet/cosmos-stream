@@ -26,7 +26,6 @@ export class RabbitMQController {
                 frameMax: 131072,
                 heartbeat: 60
             })
-             //amqp.connect(this.rabbitMqUrl, connectionOptions)
             this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
 
             // consumer
@@ -66,12 +65,17 @@ export class RabbitMQController {
     }
 
     addWebsocketPayloadToQueue(payload: string) {
-        const queued = this.rabbitMqChannel?.sendToQueue(
-            this.websocketDataProcessingQueue,
-            Buffer.from(payload),
-            { persistent: true }
-        )
-        return queued
+        try {
+            const queued = this.rabbitMqChannel?.sendToQueue(
+                this.websocketDataProcessingQueue,
+                Buffer.from(payload),
+                { persistent: true }
+            )
+            return queued
+        } catch (error) {
+            console.error("falied while adding message to the queue", error)
+            return false
+        }
     }
 
     consumeDataFromPayloadQueue() {
