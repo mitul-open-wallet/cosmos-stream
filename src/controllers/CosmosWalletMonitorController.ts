@@ -251,6 +251,7 @@ export class CosmosWalletMonitorController {
     private messageHandler() {
         this.websocket?.on('message', (data: WebSocket.Data) => {
             try {
+                console.log(`web socket response at: ${new Date()}`)
                 let responseString: string = ""
                 // Handle different data types appropriately
                 if (data instanceof ArrayBuffer) {
