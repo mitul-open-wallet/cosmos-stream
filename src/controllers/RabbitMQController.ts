@@ -3,19 +3,14 @@ import { appConfig, payloadProcessingQueueName, rabbitmqRoutingKey } from "../co
 import { Blockchain, CosmosResponse, PayloadParser, QueuePayload, queuePayloadDummy } from '../models/model';
 import { error } from 'console';
 import { Base64PayloadGenerator, GenericPayloadGenerator } from './PayloadGenerator';
-
-const connectionOptions: Options.Connect = {
-    frameMax: 8192,  // Explicitly set to the minimum required value
-    heartbeat: 60
-  };
   
 export class RabbitMQController {
     private rabbitMqChannel: amqp.Channel | undefined = undefined
-    private rabbitMqConnection: amqp.Connection | undefined = undefined
+    private rabbitMqConnection: amqp.ChannelModel | undefined = undefined
 
     //consumer
     private rabbitMqConsumerChannel: amqp.Channel | undefined = undefined
-    private rabbitMqConsumerConnection: amqp.Connection | undefined = undefined
+    private rabbitMqConsumerConnection: amqp.ChannelModel | undefined = undefined
 
     private routingKey: string
     private websocketDataProcessingQueue: string
@@ -27,13 +22,20 @@ export class RabbitMQController {
 
     async setupRabbitMq(): Promise<void> {
         try {   
-            this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl, connectionOptions)
+            this.rabbitMqConnection = await amqp.connect(this.rabbitMqUrl, {
+                frameMax: 131072,
+                heartbeat: 60
+            })
+             //amqp.connect(this.rabbitMqUrl, connectionOptions)
             this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
 
             // consumer
-            // this.rabbitMqConsumerConnection = await amqp.connect(appConfig.rabbitMQConsumerUrl, connectionOptions)
-            // this.rabbitMqConsumerChannel = await this.rabbitMqConsumerConnection.createChannel()
-            // await this.rabbitMqConsumerChannel.assertExchange(appConfig.exchangeName, 'direct')
+            this.rabbitMqConsumerConnection = await amqp.connect(appConfig.rabbitMQConsumerUrl, {
+                frameMax: 131072,
+                heartbeat: 60
+            })
+            this.rabbitMqConsumerChannel = await this.rabbitMqConsumerConnection.createChannel()
+            await this.rabbitMqConsumerChannel.assertExchange(appConfig.exchangeName, 'direct')
 
             await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
             this.consumeDataFromPayloadQueue()

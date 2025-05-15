@@ -14,9 +14,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/amqplib": "0.10.6",
+    "@types/amqplib": "0.10.7",
     "@types/ws": "^8.5.14",
-    "amqplib": "0.10.5",
+    "amqplib": "0.10.7",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "resend": "^4.4.0",
