@@ -36,7 +36,7 @@ export class RabbitMQController {
             this.rabbitMqConsumerChannel = await this.rabbitMqConsumerConnection.createChannel()
             await this.rabbitMqConsumerChannel.assertExchange(appConfig.exchangeName, 'direct')
 
-            await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
+            await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: false})
             this.consumeDataFromPayloadQueue()
         } catch (error) {
             console.error("rabbitmq connection error", {
@@ -69,7 +69,7 @@ export class RabbitMQController {
             const queued = this.rabbitMqChannel?.sendToQueue(
                 this.websocketDataProcessingQueue,
                 Buffer.from(payload),
-                { persistent: true }
+                { persistent: false }
             )
             return queued
         } catch (error) {
