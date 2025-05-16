@@ -1,5 +1,5 @@
 import amqp, { Options } from 'amqplib';
-import { appConfig, payloadProcessingQueueName, rabbitmqRoutingKey } from "../config";
+import { appConfig, blockchainQueueName, payloadProcessingQueueName, rabbitmqRoutingKey } from "../config";
 import { Blockchain, CosmosResponse, PayloadParser, QueuePayload, queuePayloadDummy } from '../models/model';
 import { error } from 'console';
 import { Base64PayloadGenerator, GenericPayloadGenerator } from './PayloadGenerator';
@@ -11,6 +11,7 @@ export class RabbitMQController {
     //consumer
     private rabbitMqConsumerChannel: amqp.Channel | undefined = undefined
     private rabbitMqConsumerConnection: amqp.ChannelModel | undefined = undefined
+    private consumerQueue = "cosmos-transaction-processor"
 
     private routingKey: string
     private websocketDataProcessingQueue: string
@@ -35,9 +36,21 @@ export class RabbitMQController {
             // })
             // this.rabbitMqConsumerChannel = await this.rabbitMqConsumerConnection.createChannel()
             await this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
+            let chainSpecificQueueName = blockchainQueueName(appConfig.blockchain)
+            let chainSpeficRoutingKey = rabbitmqRoutingKey(appConfig.blockchain)
+            const queue = await this.rabbitMqChannel.assertQueue(chainSpecificQueueName, {
+                durable: true
+            })
+            await this.rabbitMqChannel.bindQueue(
+                queue.queue,
+                appConfig.exchangeName,
+                chainSpeficRoutingKey
+            )
+
 
             // await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
             // this.consumeDataFromPayloadQueue()
+            this.consumeMessageFromQueue(queue.queue, appConfig.blockchain)
         } catch (error) {
             console.error("rabbitmq connection error", {
                 errorName: error, 
@@ -46,6 +59,37 @@ export class RabbitMQController {
             throw error
         }
     }
+
+    private consumeMessageFromQueue(queue: string, blockchain: Blockchain) {
+        if (this.rabbitMqChannel) {
+            this.rabbitMqChannel.consume(queue, (message) => {
+                console.log(`>> received on ${blockchain} ${message!.content.toString()}`)
+                if (message) {
+                    // let response: QueuePayload = JSON.parse(message.content.toString())
+                    // const blockchainResponse = toBlockchainReponse(blockchain, response)
+                    // console.log(JSON.stringify(blockchainResponse))
+                    // // Send the message
+                    // const success = this.rabbitMqConsumerChannel?.sendToQueue(
+                    //     this.consumerQueue,
+                    //      Buffer.from(JSON.stringify(blockchainResponse)
+                    //     ), {
+                    //     persistent: true
+                    // });
+                    console.log(`message sent to consumer: ${true}`)
+                    this.rabbitMqChannel?.ack(message)
+                } else {
+                    console.log("no message")
+                }
+            },
+            {
+                noAck: false
+            }
+            )
+        } else {
+            console.log(`channel not found: ${this.rabbitMqUrl} ${appConfig.exchangeName}`)
+        }
+    }
+    
 
     addMessageToChannel(payload: QueuePayload) {
         if (this.rabbitMqChannel) {
