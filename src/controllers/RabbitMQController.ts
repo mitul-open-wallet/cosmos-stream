@@ -1,6 +1,6 @@
 import amqp, { Options } from 'amqplib';
 import { appConfig, blockchainQueueName, payloadProcessingQueueName, rabbitmqRoutingKey } from "../config";
-import { Blockchain, CosmosResponse, PayloadParser, QueuePayload, queuePayloadDummy } from '../models/model';
+import { Blockchain, CosmosResponse, PayloadParser, QueuePayload, queuePayloadDummy, toBlockchainReponse } from '../models/model';
 import { error } from 'console';
 import { Base64PayloadGenerator, GenericPayloadGenerator } from './PayloadGenerator';
   
@@ -30,11 +30,13 @@ export class RabbitMQController {
             this.rabbitMqChannel = await this.rabbitMqConnection.createChannel()
 
             // consumer
-            // this.rabbitMqConsumerConnection = await amqp.connect(appConfig.rabbitMQConsumerUrl, {
-            //     frameMax: 131072,
-            //     heartbeat: 60
-            // })
-            // this.rabbitMqConsumerChannel = await this.rabbitMqConsumerConnection.createChannel()
+            this.rabbitMqConsumerConnection = await amqp.connect(appConfig.rabbitMQConsumerUrl, {
+                frameMax: 131072,
+                heartbeat: 60
+            })
+            this.rabbitMqConsumerChannel = await this.rabbitMqConsumerConnection.createChannel()
+            console.log("consumer channel set")
+            //
             await this.rabbitMqChannel.assertExchange(appConfig.exchangeName, 'direct')
             let chainSpecificQueueName = blockchainQueueName(appConfig.blockchain)
             let chainSpeficRoutingKey = rabbitmqRoutingKey(appConfig.blockchain)
@@ -50,7 +52,7 @@ export class RabbitMQController {
 
             // await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
             // this.consumeDataFromPayloadQueue()
-            this.consumeMessageFromQueue(queue.queue, appConfig.blockchain)
+            await this.consumeMessageFromQueue(queue.queue, appConfig.blockchain)
         } catch (error) {
             console.error("rabbitmq connection error", {
                 errorName: error, 
@@ -60,22 +62,22 @@ export class RabbitMQController {
         }
     }
 
-    private consumeMessageFromQueue(queue: string, blockchain: Blockchain) {
+    private async consumeMessageFromQueue(queue: string, blockchain: Blockchain) {
         if (this.rabbitMqChannel) {
-            this.rabbitMqChannel.consume(queue, (message) => {
+            await this.rabbitMqChannel.consume(queue, (message) => {
                 console.log(`>> received on ${blockchain} ${message!.content.toString()}`)
                 if (message) {
-                    // let response: QueuePayload = JSON.parse(message.content.toString())
-                    // const blockchainResponse = toBlockchainReponse(blockchain, response)
-                    // console.log(JSON.stringify(blockchainResponse))
-                    // // Send the message
-                    // const success = this.rabbitMqConsumerChannel?.sendToQueue(
-                    //     this.consumerQueue,
-                    //      Buffer.from(JSON.stringify(blockchainResponse)
-                    //     ), {
-                    //     persistent: true
-                    // });
-                    console.log(`message sent to consumer: ${true}`)
+                    let response: QueuePayload = JSON.parse(message.content.toString())
+                    const blockchainResponse = toBlockchainReponse(blockchain, response)
+                    console.log(JSON.stringify(blockchainResponse))
+                    // Send the message
+                    const success = this.rabbitMqConsumerChannel?.sendToQueue(
+                        this.consumerQueue,
+                         Buffer.from(JSON.stringify(blockchainResponse)
+                        ), {
+                        persistent: true
+                    });
+                    console.log(`message sent to consumer: ${success}`)
                     this.rabbitMqChannel?.ack(message)
                 } else {
                     console.log("no message")
