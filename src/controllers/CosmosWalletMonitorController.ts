@@ -262,6 +262,7 @@ export class CosmosWalletMonitorController {
                     // Already a string
                     responseString = data.toString();
                 }
+                this.lastKnownMessageTimestamp = new Date()
                 this.rawPayload(responseString)
             } catch (error) {
                 if (error instanceof SyntaxError) {
