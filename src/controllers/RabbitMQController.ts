@@ -48,10 +48,6 @@ export class RabbitMQController {
                 appConfig.exchangeName,
                 chainSpeficRoutingKey
             )
-
-
-            // await this.rabbitMqChannel.assertQueue(this.websocketDataProcessingQueue, {durable: true})
-            // this.consumeDataFromPayloadQueue()
             await this.consumeMessageFromQueue(queue.queue, appConfig.blockchain)
         } catch (error) {
             console.error("rabbitmq connection error", {
@@ -113,18 +109,6 @@ export class RabbitMQController {
     }
 
     async addWebsocketPayloadToQueue(payload: string) {
-        // try {
-        //     const queued = this.rabbitMqChannel?.sendToQueue(
-        //         this.websocketDataProcessingQueue,
-        //         Buffer.from(payload),
-        //         { persistent: false }
-        //     )
-        //     return queued
-        // } catch (error) {
-        //     console.error("falied while adding message to the queue", error)
-        //     return false
-        // }
-        
         let response: CosmosResponse = JSON.parse(payload)
         const payloadParser = this.payloadParser()
         const queuePayload = payloadParser.handleResponse(response)

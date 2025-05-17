@@ -11,28 +11,21 @@ export class CosmosHubDataOrchestrator {
     async bootstrap() {
         await this.start()
         let oneMinute = 60000
-        // setTimeout(() => {
-        //     setInterval(async () => {
-        //         console.log("checking if restart is required")
-        //         try {
-        //             await this.cosmosWalletMonitorController?.restartIfRequired()
-        //         } catch (error) {
-        //             console.error("did not get an opportunity to restart")
-        //         }
-        //     }, oneMinute * 2)
-        // }, oneMinute * 2)
+        setTimeout(() => {
+            setInterval(async () => {
+                console.log("checking if restart is required")
+                try {
+                    await this.cosmosWalletMonitorController?.restartIfRequired()
+                } catch (error) {
+                    console.error("did not get an opportunity to restart")
+                }
+            }, oneMinute * 2)
+        }, oneMinute * 2)
     }
 
     private async start() {
         try {
-            this.cosmosWalletMonitorController = new CosmosWalletMonitorController((response) => {
-                try {
-                    console.log(`${JSON.stringify(response)}`)
-                    this.rabbitMQController.addMessageToChannel(response)
-                } catch (error) {
-                    console.error("caught an error while adding message to the exchange", error)
-                }
-            }, async (rawPayload) => {
+            this.cosmosWalletMonitorController = new CosmosWalletMonitorController(async (rawPayload) => {
                 const queued = await this.rabbitMQController.addWebsocketPayloadToQueue(rawPayload)
                 console.log(`queued successfully: ${queued}`)
             })
